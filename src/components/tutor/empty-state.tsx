@@ -30,10 +30,9 @@ type Props = {
   level: Level
   setLevel: (l: Level) => void
   onStart: (topic: string, attachments?: Attachment[]) => void
-  mode: "live" | "sample" | null
 }
 
-export function EmptyState({ level, setLevel, onStart, mode }: Props) {
+export function EmptyState({ level, setLevel, onStart }: Props) {
   const [topic, setTopic] = React.useState("")
   const [files, setFiles] = React.useState<Attachment[]>([])
   const fileInput = React.useRef<HTMLInputElement>(null)
@@ -76,11 +75,6 @@ export function EmptyState({ level, setLevel, onStart, mode }: Props) {
           <p className="max-w-md text-sm text-balance text-muted-foreground">
             Type any topic, or attach your notes, and get a two-minute lesson drawn on a whiteboard.
           </p>
-          {mode === "sample" && (
-            <p className="max-w-md text-xs text-balance text-muted-foreground/80">
-              Sample mode: no AI key is configured, so every topic plays the same pre-written lesson.
-            </p>
-          )}
         </div>
 
         <PromptBox

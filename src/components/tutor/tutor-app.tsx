@@ -1,9 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { PlusIcon } from "lucide-react"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import type { Attachment } from "@/lib/attachments"
@@ -16,6 +14,7 @@ import { AppSidebar } from "./app-sidebar"
 import { BoardStage } from "./board-stage"
 import { ChatPanel } from "./chat-panel"
 import { EmptyState } from "./empty-state"
+import { HeaderActions } from "./header-actions"
 import type { ChatItem, ClipState } from "./types"
 
 type Status = { mode: "live" | "sample"; model: string | null; voice: string | null }
@@ -50,6 +49,19 @@ export function TutorApp() {
   const [input, setInput] = React.useState("")
   const [ink, setInk] = React.useState<Record<string, InkStroke[]>>({})
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const boardPanel = React.useRef<HTMLDivElement>(null)
+  const [fullscreen, setFullscreen] = React.useState(false)
+
+  React.useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === boardPanel.current && !!boardPanel.current)
+    document.addEventListener("fullscreenchange", onChange)
+    return () => document.removeEventListener("fullscreenchange", onChange)
+  }, [])
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen()
+    else boardPanel.current?.requestFullscreen?.().catch(() => toast.error("Full screen isn't available in this browser"))
+  }
 
   // Refs mirror state for use inside streaming callbacks.
   const activeRef = React.useRef<string | null>(null)
@@ -263,19 +275,26 @@ export function TutorApp() {
             <>
               <Separator orientation="vertical" className="mx-1 h-4" />
               <h1 className="truncate text-sm font-medium">{lessonTitle}</h1>
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={reset}>
-                <PlusIcon data-icon="inline-start" /> New lesson
-              </Button>
             </>
           )}
+          <HeaderActions
+            status={status}
+            inLesson={inLesson}
+            title={lessonTitle ?? "Lesson"}
+            items={items}
+            clips={clips}
+            onNew={reset}
+            onFullscreen={toggleFullscreen}
+            fullscreen={fullscreen}
+          />
         </header>
 
         {!inLesson ? (
-          <EmptyState level={level} setLevel={setLevel} onStart={startLesson} mode={status?.mode ?? null} />
+          <EmptyState level={level} setLevel={setLevel} onStart={startLesson} />
         ) : (
           <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
             {/* Whiteboard preview */}
-            <div className="mx-3 mb-3 flex min-h-0 flex-[3] flex-col rounded-2xl bg-muted/60 p-3 lg:order-2 lg:m-3 lg:mt-0 lg:min-w-0 lg:flex-1 lg:p-5 dark:bg-muted/30">
+            <div ref={boardPanel} className="mx-3 mb-3 flex min-h-0 flex-[3] flex-col rounded-2xl bg-muted/60 p-3 lg:order-2 lg:m-3 lg:mt-0 lg:min-w-0 lg:flex-1 lg:p-5 dark:bg-muted/30 fullscreen:m-0 fullscreen:rounded-none fullscreen:bg-background fullscreen:p-6">
               <BoardStage
                 player={player}
                 snap={snap}
