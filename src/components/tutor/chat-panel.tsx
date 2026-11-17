@@ -90,6 +90,12 @@ export function ChatPanel(props: Props) {
                       onPlayClip={props.onPlayClip}
                       onChapter={props.onChapter}
                       onRetry={props.onRetry}
+                      // Only the newest quiz question still waiting for an answer gets the answer box.
+                      quizAnswer={
+                        idx === items.length - 1
+                          ? { busy: props.busy, onSubmit: (t) => props.onSend(t) }
+                          : undefined
+                      }
                     />
                   )}
                 </MessageScrollerItem>

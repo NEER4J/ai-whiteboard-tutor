@@ -337,16 +337,26 @@ export function TutorApp() {
     <SidebarProvider defaultOpen className="h-dvh min-h-0">
       <AppSidebar activeId={lessonId} status={status} onNew={goHome} onOpen={(id) => openSession(id)} />
       <SidebarInset className="min-h-0 min-w-0 overflow-hidden border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
-        <header className="flex h-12 shrink-0 items-center gap-2 px-3">
-          <SidebarTrigger className="-ml-1 text-muted-foreground" />
-          {inLesson && (
-            <>
-              <Separator orientation="vertical" className="mx-1 h-4" />
-              <h1 className="hidden min-w-0 truncate text-sm font-medium md:block">{lessonTitle}</h1>
-              <Separator orientation="vertical" className="mx-1 hidden h-4 md:block" />
-              {snap && <ChapterPicker snap={snap} onSelect={(i) => activeId && goToChapter(activeId, i)} />}
-            </>
-          )}
+        <header className="flex h-12 shrink-0 items-center px-3">
+          {/* Left cell: sidebar toggle + lesson title. On wide screens it is exactly as
+              wide as the chat column, so the chapter switcher that follows starts where
+              the whiteboard preview starts. */}
+          <div
+            className={
+              inLesson
+                ? "flex min-w-0 items-center gap-2 pr-3 lg:w-[380px] lg:shrink-0 lg:pr-3 xl:w-[420px]"
+                : "flex items-center"
+            }
+          >
+            <SidebarTrigger className="-ml-1 shrink-0 text-muted-foreground" />
+            {inLesson && (
+              <>
+                <Separator orientation="vertical" className="mx-1 h-4 shrink-0" />
+                <h1 className="min-w-0 truncate text-sm font-medium">{lessonTitle}</h1>
+              </>
+            )}
+          </div>
+          {inLesson && snap && <ChapterPicker snap={snap} onSelect={(i) => activeId && goToChapter(activeId, i)} />}
           <HeaderActions
             inLesson={inLesson}
             title={lessonTitle ?? "Lesson"}

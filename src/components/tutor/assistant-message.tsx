@@ -8,7 +8,9 @@ import {
   CircleHelpIcon,
   LayersIcon,
   PlayIcon,
+  LightbulbIcon,
   RefreshCwIcon,
+  SendIcon,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
@@ -16,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Message, MessageContent } from "@/components/ui/message"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 import type { PlayerSnapshot } from "@/lib/player"
@@ -25,6 +28,10 @@ import type { ClipState } from "./types"
 
 /** What kind of follow-up this was, from the learner's own words. */
 function intentOf(text: string) {
+  // The learner's own quiz answer: the tutor is giving feedback, not asking a new question.
+  if (/^here is my answer to your quiz/i.test(text)) return { label: "Feedback", quiz: false, tone: "emerald" as const }
+  // A hint request keeps the same question open, so the answer box stays.
+  if (/^i'?m not sure about the quiz/i.test(text)) return { label: "Hint", quiz: true, tone: "violet" as const }
   if (/quiz|test me|check that i/i.test(text)) return { label: "Quiz", quiz: true, tone: "violet" as const }
   if (/simpl|didn'?t (quite )?get|confus|analogy/i.test(text)) return { label: "Simpler explanation", quiz: false, tone: "sky" as const }
   if (/example|show me/i.test(text)) return { label: "Example", quiz: false, tone: "amber" as const }
@@ -56,9 +63,11 @@ type Props = {
   onPlayClip: (clipId: string) => void
   onChapter: (clipId: string, chapter: number) => void
   onRetry: (clipId: string) => void
+  /** Present on quiz questions that are still waiting for the learner's answer. */
+  quizAnswer?: { busy: boolean; onSubmit: (text: string) => void }
 }
 
-export function AssistantMessage({ clip, userText, level, activeClipId, snap, onPlayClip, onChapter, onRetry }: Props) {
+export function AssistantMessage({ clip, userText, level, activeClipId, snap, onPlayClip, onChapter, onRetry, quizAnswer }: Props) {
   if (!clip) return null
   const active = activeClipId === clip.id
   const generating = !clip.done && !clip.error
@@ -90,6 +99,7 @@ export function AssistantMessage({ clip, userText, level, activeClipId, snap, on
               <div className="min-w-0">
                 <p className="mb-0.5 text-xs font-medium text-violet-700 dark:text-violet-300">Your turn: answer below</p>
                 <MarkdownLite text={clip.reply} />
+                {clip.done && quizAnswer && <QuizAnswer busy={quizAnswer.busy} onSubmit={quizAnswer.onSubmit} />}
               </div>
             </div>
           ) : (
@@ -236,7 +246,7 @@ function LessonCard({
                 onClick={() => onChapter(clip.id, i)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition-colors hover:bg-background/60 disabled:opacity-50",
-                  isCurrent && "bg-background shadow-[0_1px_3px_rgb(0_0_0/0.1)] hover:bg-background dark:bg-card"
+                  isCurrent && "bg-background hover:bg-background dark:bg-card"
                 )}
               >
                 <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums", CHAPTER[i % CHAPTER.length])}>
@@ -289,5 +299,49 @@ function BoardAnswer({ clip, active, snap, onPlay }: { clip: ClipState; active: 
         </span>
       </span>
     </button>
+  )
+}
+
+/** Type the quiz answer right under the question (or ask for a hint). */
+function QuizAnswer({ busy, onSubmit }: { busy: boolean; onSubmit: (text: string) => void }) {
+  const [text, setText] = React.useState("")
+  const canSend = text.trim().length > 1 && !busy
+  const submit = () => {
+    if (!canSend) return
+    onSubmit(`Here is my answer to your quiz question: ${text.trim()}`)
+    setText("")
+  }
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault()
+            submit()
+          }
+        }}
+        rows={2}
+        maxLength={500}
+        placeholder="Type your answer here…"
+        aria-label="Your answer to the quiz question"
+        className="min-h-16 resize-none rounded-xl border-transparent bg-background text-[14px] shadow-none focus-visible:ring-1"
+      />
+      <div className="flex items-center gap-2">
+        <Button size="sm" className="rounded-full" disabled={!canSend} onClick={submit}>
+          <SendIcon data-icon="inline-start" /> Check my answer
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="rounded-full text-violet-700 hover:bg-violet-100 dark:text-violet-300 dark:hover:bg-violet-400/15"
+          disabled={busy}
+          onClick={() => onSubmit("I'm not sure about the quiz question. Can you give me a hint without giving away the answer?")}
+        >
+          <LightbulbIcon data-icon="inline-start" /> Give me a hint
+        </Button>
+      </div>
+    </div>
   )
 }
