@@ -74,6 +74,11 @@ function drawDuration(el: BoardElement) {
       return clamp(el.points.length * 0.06, 0.6, 1.8)
     case "axes":
       return 1
+    case "icon":
+    case "note":
+      return 1
+    case "bars":
+      return 1.4
     case "rect":
     case "circle":
       return 0.8

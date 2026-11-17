@@ -90,7 +90,7 @@ Server (Next.js route handlers)
 
 **1. The lesson is data, not a video.** The model returns a typed `Clip`:
 `segments[]`, each with 1–3 sentences of `narration` and the `elements` drawn
-during it (`text`, `line`, `arrow`, `rect`, `circle`, `path`, `axes`, `highlight`)
+during it (`text`, `line`, `arrow`, `curve`, `rect`, `circle`, `ellipse`, `path`, `axes`, `bars`, `brace`, `note`, `icon` (24 hand-drawn icons), `highlight`)
 on a fixed 1000×600 board ([`src/lib/schema.ts`](src/lib/schema.ts)). Because it
 is structured, everything (seeking, chapters, captions, clicking on drawings,
 follow-up context) works on it directly, and output is checked with zod

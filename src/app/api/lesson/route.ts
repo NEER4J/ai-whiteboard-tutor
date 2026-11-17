@@ -59,7 +59,7 @@ export async function POST(req: Request) {
         }
       : { prompt: userText }),
     output: Output.object({ schema: clipSchema }),
-    maxOutputTokens: 8000,
+    maxOutputTokens: 14000,
     abortSignal: req.signal,
   })
 

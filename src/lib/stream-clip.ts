@@ -110,6 +110,17 @@ function clampElement(el: BoardElement): BoardElement {
       }
     case "axes":
       return { ...el, x: cx(el.x), y: cy(el.y) }
+    case "icon":
+      return { ...el, x: cx(el.x), y: cy(el.y) }
+    case "ellipse":
+      return { ...el, cx: cx(el.cx), cy: cy(el.cy), rx: Math.max(4, Math.min(el.rx, 400)), ry: Math.max(4, Math.min(el.ry, 280)) }
+    case "curve":
+    case "brace":
+      return { ...el, x1: cx(el.x1), y1: cy(el.y1), x2: cx(el.x2), y2: cy(el.y2) }
+    case "note":
+      return { ...el, x: cx(el.x), y: cy(el.y), w: Math.max(80, Math.min(el.w, BOARD_W - el.x)), h: Math.max(50, Math.min(el.h, BOARD_H - el.y)) }
+    case "bars":
+      return { ...el, x: cx(el.x), y: cy(el.y), values: el.values.slice(0, 7).map((v) => (Number.isFinite(v) ? v : 0)) }
     default:
       return el
   }

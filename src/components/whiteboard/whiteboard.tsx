@@ -213,6 +213,18 @@ export function describe(el: BoardElement): string {
       return [el.yLabel, el.xLabel].filter(Boolean).join(" vs ") || "the graph"
     case "path":
       return "the curve"
+    case "icon":
+      return el.label ?? `the ${el.name}`
+    case "ellipse":
+      return el.label ?? "the oval"
+    case "curve":
+      return el.label ?? "the curved arrow"
+    case "note":
+      return el.text
+    case "bars":
+      return "the bar chart"
+    case "brace":
+      return el.label ?? "the bracket"
     default:
       return "this"
   }

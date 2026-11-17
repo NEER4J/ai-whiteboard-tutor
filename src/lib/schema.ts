@@ -94,6 +94,78 @@ export const axesElement = z.object({
   yLabel: z.string().optional(),
 })
 
+export const ICON_NAMES = [
+  "sun", "cloud", "tree", "house", "person", "bulb", "gear", "heart", "star",
+  "magnet", "battery", "droplet", "mountain", "book", "flask", "laptop",
+  "globe", "rocket", "clock", "lock", "brain", "flame", "leaf", "atom",
+] as const
+
+export const iconElement = z.object({
+  type: z.literal("icon"),
+  ...base,
+  name: z.enum(ICON_NAMES).describe("Built-in hand-drawn icon. Use for real-world objects: they make a board feel illustrated."),
+  x: z.number().describe("Top-left x of the icon box"),
+  y: z.number().describe("Top-left y of the icon box"),
+  size: z.number().optional().describe("Box size in px, 60-140 (default 90)"),
+  label: z.string().optional().describe("Caption drawn under the icon"),
+})
+
+export const ellipseElement = z.object({
+  type: z.literal("ellipse"),
+  ...base,
+  cx: z.number(),
+  cy: z.number(),
+  rx: z.number(),
+  ry: z.number(),
+  fill: z.boolean().optional(),
+  label: z.string().optional().describe("Text centered inside"),
+})
+
+export const curveElement = z.object({
+  type: z.literal("curve"),
+  ...base,
+  x1: z.number(),
+  y1: z.number(),
+  x2: z.number(),
+  y2: z.number(),
+  bend: z.number().optional().describe("Sideways bulge in px, -160..160 (positive bends clockwise). Use for loops, feedback and cycles."),
+  head: z.boolean().optional().describe("Arrowhead at the end (default true)"),
+  dashed: z.boolean().optional(),
+  label: z.string().optional(),
+})
+
+export const noteElement = z.object({
+  type: z.literal("note"),
+  ...base,
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+  text: z.string().describe("Short takeaway (max ~12 words). Use for key ideas, definitions, formulas."),
+})
+
+export const barsElement = z.object({
+  type: z.literal("bars"),
+  ...base,
+  x: z.number().describe("Left of the chart"),
+  y: z.number().describe("Baseline y (bottom of the bars)"),
+  w: z.number(),
+  h: z.number().describe("Height of the tallest bar"),
+  values: z.array(z.number()).describe("2-7 values"),
+  labels: z.array(z.string()).optional().describe("One short label per bar"),
+  highlight: z.number().optional().describe("Index of the bar to emphasise"),
+})
+
+export const braceElement = z.object({
+  type: z.literal("brace"),
+  ...base,
+  x1: z.number(),
+  y1: z.number(),
+  x2: z.number(),
+  y2: z.number(),
+  label: z.string().optional().describe("Text at the brace tip"),
+})
+
 export const highlightElement = z.object({
   type: z.literal("highlight"),
   ...base,
@@ -109,6 +181,12 @@ export const elementSchema = z.discriminatedUnion("type", [
   circleElement,
   pathElement,
   axesElement,
+  iconElement,
+  ellipseElement,
+  curveElement,
+  noteElement,
+  barsElement,
+  braceElement,
   highlightElement,
 ])
 
@@ -120,10 +198,16 @@ export const segmentSchema = z.object({
     .string()
     .optional()
     .describe("Short chapter name, required when newBoard is true"),
+  boardPlan: z
+    .string()
+    .optional()
+    .describe(
+      "Only when newBoard is true: ONE sentence planning the layout, naming zones and coordinates (e.g. 'title top-left; flow diagram across y 150-350; note box bottom-right at 620,420'). Never shown to the learner."
+    ),
   narration: z
     .string()
     .describe("What the tutor says aloud: 1-3 plain spoken sentences, no markdown or symbols."),
-  elements: z.array(elementSchema).describe("0-6 elements drawn during this narration"),
+  elements: z.array(elementSchema).describe("3-8 elements drawn during this narration, in the order the narrator mentions them"),
 })
 
 export const clipSchema = z.object({
