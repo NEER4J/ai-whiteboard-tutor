@@ -19,25 +19,25 @@ const EXAMPLES = [
   {
     text: "Why is the sky blue?",
     icon: SunIcon,
-    card: "bg-sky-100 hover:bg-sky-200/80 dark:bg-sky-400/15 dark:hover:bg-sky-400/25",
+    card: "bg-sky-50 hover:bg-sky-100/80 dark:bg-sky-400/10 dark:hover:bg-sky-400/20",
     iconColor: "text-sky-600 dark:text-sky-300",
   },
   {
     text: "How does a neural network learn?",
     icon: BrainCircuitIcon,
-    card: "bg-violet-100 hover:bg-violet-200/80 dark:bg-violet-400/15 dark:hover:bg-violet-400/25",
+    card: "bg-violet-50 hover:bg-violet-100/80 dark:bg-violet-400/10 dark:hover:bg-violet-400/20",
     iconColor: "text-violet-600 dark:text-violet-300",
   },
   {
     text: "Explain the Pythagorean theorem",
     icon: RulerIcon,
-    card: "bg-amber-100 hover:bg-amber-200/80 dark:bg-amber-400/15 dark:hover:bg-amber-400/25",
+    card: "bg-amber-50 hover:bg-amber-100/80 dark:bg-amber-400/10 dark:hover:bg-amber-400/20",
     iconColor: "text-amber-600 dark:text-amber-300",
   },
   {
     text: "How do vaccines train the immune system?",
     icon: SyringeIcon,
-    card: "bg-emerald-100 hover:bg-emerald-200/80 dark:bg-emerald-400/15 dark:hover:bg-emerald-400/25",
+    card: "bg-emerald-50 hover:bg-emerald-100/80 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/20",
     iconColor: "text-emerald-600 dark:text-emerald-300",
   },
 ]
@@ -89,7 +89,7 @@ export function EmptyState({ level, setLevel, onStart }: Props) {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 pb-10">
       <BoardDoodles />
-      <div className="relative my-auto flex w-full max-w-4xl flex-col gap-9 py-8">
+      <div className="relative my-auto flex w-full max-w-3xl flex-col gap-9 py-8">
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.7rem]">
             {hello} <span aria-hidden>👋</span>

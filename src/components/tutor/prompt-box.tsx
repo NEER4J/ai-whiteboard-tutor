@@ -42,7 +42,7 @@ export function PromptBox({ value, onChange, onSubmit, placeholder, busy, onStop
           // The send button is disabled while empty; don't let that fade the whole box.
           "rounded-2xl border-transparent bg-muted/70 shadow-[0_2px_8px_-3px_rgb(0_0_0/0.12)] has-disabled:bg-muted/70 has-disabled:opacity-100 dark:bg-muted/50 dark:has-disabled:bg-muted/50",
           size === "lg" &&
-            "rounded-3xl border-violet-200/80 bg-white bg-linear-to-br from-violet-50 via-sky-50 to-rose-50 shadow-[0_4px_18px_-8px_rgb(124_58_237/0.25)] has-disabled:bg-white dark:border-white/10 dark:bg-card dark:from-violet-500/12 dark:via-sky-500/10 dark:to-rose-500/10 dark:has-disabled:bg-card"
+            "rounded-3xl border-border/80 bg-card shadow-[0_2px_10px_-4px_rgb(0_0_0/0.08)] has-disabled:bg-card dark:bg-card/70 dark:has-disabled:bg-card/70"
         )}
       >
         {header && (
