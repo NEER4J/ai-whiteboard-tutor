@@ -47,7 +47,7 @@ export function LevelSlider({
       <div className="w-28">
         <Slider
           aria-label="Lesson level"
-          className="py-2 [&:not([data-dragging])_[data-slot=slider-range]]:transition-[width] [&:not([data-dragging])_[data-slot=slider-range]]:duration-200 [&:not([data-dragging])_[data-slot=slider-thumb]]:transition-[inset-inline-start,left] [&:not([data-dragging])_[data-slot=slider-thumb]]:duration-200 [&_[data-slot=slider-thumb]]:size-4 [&_[data-slot=slider-thumb]]:shadow-sm [&_[data-slot=slider-track]]:h-1.5"
+          className="py-2 [&_*]:cursor-pointer [&[data-dragging]_*]:cursor-grabbing [&:not([data-dragging])_[data-slot=slider-range]]:transition-[width] [&:not([data-dragging])_[data-slot=slider-range]]:duration-200 [&:not([data-dragging])_[data-slot=slider-thumb]]:transition-[inset-inline-start,left] [&:not([data-dragging])_[data-slot=slider-thumb]]:duration-200 [&_[data-slot=slider-thumb]]:size-4 [&_[data-slot=slider-thumb]]:shadow-sm [&_[data-slot=slider-track]]:h-1.5"
           min={0}
           max={2}
           step={0.01}
