@@ -55,7 +55,7 @@ export function ChatPanel(props: Props) {
     <div className="flex min-h-0 flex-1 flex-col">
       <MessageScrollerProvider autoScroll>
         <MessageScroller className="flex-1">
-          <MessageScrollerViewport>
+          <MessageScrollerViewport className="outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0">
             <MessageScrollerContent className="gap-5 px-4 py-4">
               {items.map((item, idx) => (
                 <MessageScrollerItem key={item.id} messageId={item.id} scrollAnchor={item.role === "user"}>

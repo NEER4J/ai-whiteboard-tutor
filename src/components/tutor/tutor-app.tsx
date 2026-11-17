@@ -65,6 +65,7 @@ export function TutorApp() {
   const [activeId, setActiveId] = React.useState<string | null>(null)
   const [lessonId, setLessonId] = React.useState<string | null>(null)
   const [input, setInput] = React.useState("")
+  const [notice, setNotice] = React.useState<string | null>(null)
   const [ink, setInk] = React.useState<Record<string, InkStroke[]>>({})
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
   const boardPanel = React.useRef<HTMLDivElement>(null)
@@ -149,7 +150,21 @@ export function TutorApp() {
       }
 
       try {
-        await streamClip(req, apply, ac.signal)
+        const result = await streamClip(req, apply, ac.signal)
+        // The model decided this wasn't a topic (greeting, small talk): no lesson, just its reply.
+        if (kind === "lesson" && result.segments.length === 0) {
+          aborts.current.forEach((a) => a.abort())
+          player?.pause()
+          setNotice(result.reply ?? "What would you like to learn? Type any topic and I'll teach it on the whiteboard.")
+          setTopic(null)
+          setItems([])
+          setClips({})
+          setLessonId(null)
+          setActiveId(null)
+          activeRef.current = null
+          setUrl("/", "replace")
+          return
+        }
       } catch (err) {
         if (ac.signal.aborted) {
           setClips((m) => ({ ...m, [clipId]: { ...m[clipId], done: true } }))
@@ -374,7 +389,7 @@ export function TutorApp() {
         </header>
 
         {!inLesson ? (
-          <EmptyState level={level} setLevel={setLevel} onStart={startLesson} />
+          <EmptyState level={level} setLevel={setLevel} onStart={startLesson} notice={notice} onClearNotice={() => setNotice(null)} />
         ) : (
           <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
             {/* Whiteboard preview */}

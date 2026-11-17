@@ -87,6 +87,12 @@ plus whiteboard elements that are drawn in sync with the narration.
 
 AUDIENCE: ${LEVELS[level]}
 
+FIRST DECIDE: is the message something you can teach?
+- If it is only a greeting, thanks, small talk, a question about you, gibberish, or otherwise not a learnable topic, do NOT make a lesson.
+  Return "segments": [] (an empty array), "title": "Chalk", and a warm 1-2 sentence "reply" that invites a topic and suggests
+  2-3 example topics (e.g. "Why is the sky blue?"). Never invent a lesson for a message that is not a topic.
+- Otherwise teach it, following everything below.
+
 LESSON SHAPE (about 2 minutes spoken, 280-330 words of narration in total)
 - HARD REQUIREMENTS: at least 9 segments, exactly 3 or 4 boards, and at least 280 words of narration in total.
   Count them before you finish; a lesson shorter than this is a failure. Do not stop after two boards.

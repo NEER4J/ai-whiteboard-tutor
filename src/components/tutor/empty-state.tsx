@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { BrainCircuitIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
+import { AudioWaveformIcon, BrainCircuitIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Kbd } from "@/components/ui/kbd"
 import type { Attachment } from "@/lib/attachments"
 import { useAttachments } from "@/lib/use-attachments"
+import { checkTopic, SUGGESTIONS } from "@/lib/intent"
 import type { Level } from "@/lib/schema"
 import { AttachButton, AttachmentChips } from "./attachment-chips"
 import { BoardDoodles } from "./board-doodles"
@@ -50,15 +51,29 @@ type Props = {
   level: Level
   setLevel: (l: Level) => void
   onStart: (topic: string, attachments?: Attachment[]) => void
+  /** A friendly message from the tutor instead of a lesson (e.g. after "hi"). */
+  notice?: string | null
+  onClearNotice?: () => void
 }
 
-export function EmptyState({ level, setLevel, onStart }: Props) {
+export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: Props) {
   const [topic, setTopic] = React.useState("")
   const { files, add, remove } = useAttachments()
+  const [localNotice, setLocalNotice] = React.useState<string | null>(null)
+  const shownNotice = localNotice ?? notice ?? null
   // Time-of-day greeting without a hydration mismatch.
   const hello = React.useSyncExternalStore(noopSubscribe, greeting, () => "Hello")
 
   const start = (text: string) => {
+    // Greetings, thanks and gibberish never start a lesson.
+    if (!files.length) {
+      const verdict = checkTopic(text)
+      if (!verdict.ok) {
+        setLocalNotice(verdict.reply)
+        return
+      }
+    }
+    setLocalNotice(null)
     const t = text.trim() || (files.length ? `the attached ${files.length > 1 ? "material" : files[0].name}` : "")
     onStart(t, files.length ? files : undefined)
   }
@@ -81,7 +96,13 @@ export function EmptyState({ level, setLevel, onStart }: Props) {
           autoFocus
           allowEmpty={files.length > 0}
           value={topic}
-          onChange={setTopic}
+          onChange={(v) => {
+            setTopic(v)
+            if (shownNotice) {
+              setLocalNotice(null)
+              onClearNotice?.()
+            }
+          }}
           onSubmit={() => start(topic)}
           placeholder="Teach me how black holes form…"
           onPasteFiles={add}
@@ -96,6 +117,29 @@ export function EmptyState({ level, setLevel, onStart }: Props) {
           }
           endAddon={<LevelSlider level={level} setLevel={setLevel} />}
         />
+
+        {shownNotice && (
+          <div className="-mt-4 flex animate-in gap-3 rounded-2xl bg-muted/60 p-3.5 duration-300 fade-in slide-in-from-top-1 dark:bg-muted/40" role="status">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <AudioWaveformIcon className="size-4" />
+            </span>
+            <div className="flex min-w-0 flex-col gap-2.5">
+              <p className="text-sm leading-relaxed">{shownNotice}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {SUGGESTIONS.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => onStart(q)}
+                    className="rounded-full bg-background px-3 py-1.5 text-xs transition-colors hover:bg-foreground hover:text-background"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           <p className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Get started with an example</p>
