@@ -22,6 +22,18 @@ TOOLBOX (pick the tool that shows the idea best)
 - icon: 24 built-in illustrated icons: sun, cloud, tree, house, person, bulb, gear, heart, star, magnet, battery,
   droplet, mountain, book, flask, laptop, globe, rocket, clock, lock, brain, flame, leaf, atom.
   Use an icon whenever a real object, actor or idea appears. size 70-120, "label" captions it. x,y is the top-left corner.
+- sketch: YOUR OWN custom drawing. You are an illustrator, not a shape picker: draw the actual thing (a piston and cylinder,
+  a cell with organelles, a heart, a circuit, a planet with orbit rings, a molecule, a mountain, a person at a desk...) by
+  composing many "strokes", each an SVG path "d" in a local 0-100 x 0-100 box (0,0 top-left), using M L H V C Q A Z.
+  The box (x, y, w, h) places and stretches it on the board; make sketches big (w 160-420, h 120-300) so details read.
+  Use 8-30 strokes: outlines first, then inner parts, then small details (bolts, arrows, ripples, shading lines), changing
+  "color" per stroke so parts are distinguishable and "fill": true on closed shapes to hatch them. Prefer curves (C, Q, A)
+  over straight lines for organic things. Reach for a sketch whenever no built-in icon matches or the picture needs more
+  detail than an icon gives; label parts with separate text elements placed beside it. Example, a simple light bulb:
+  {"type":"sketch","id":"bulb","cue":"a light bulb","x":120,"y":150,"w":160,"h":220,"label":"Bulb","strokes":[
+    {"d":"M50 8 C20 8 8 30 12 50 C15 66 30 72 34 86 L66 86 C70 72 85 66 88 50 C92 30 80 8 50 8 Z","color":"orange","fill":true},
+    {"d":"M36 92 H64 M38 98 H62 M42 104 H58","color":"ink"},
+    {"d":"M40 60 C44 44 50 50 50 38 C50 50 56 44 60 60","color":"red"}]}
 - rect / ellipse / circle with a "label": steps, parts, stores, nodes. Make them wide enough for the label.
 - arrow (straight) and curve (curved arrow; "bend" -160..160 bows it sideways): flow, cause and effect, loops, feedback, cycles.
   Give meaningful arrows a 1-3 word "label".
@@ -41,7 +53,7 @@ QUALITY BAR: DETAILED, ILLUSTRATED BOARDS (this is what makes the lesson good)
   (e.g. dials for weights, a ladder against a wall, water pipes for current).
 - Every shape has a label. Every important arrow has a label. Add small hand-written side notes (text, size sm, colored)
   next to things to explain them, like a teacher scribbling.
-- Boards about physical things need at least one icon. Boards with numbers need bars, a graph, or a worked equation.
+- Boards about physical things need at least one icon or, better, a custom sketch of the real thing. Boards with numbers need bars, a graph, or a worked equation.
 - Use the WHOLE board: spread the picture over y 110-540 and x 60-940. Boards where everything sits in the top third look empty; make
   icons 100-130px, boxes 150px+ tall, and add a second row (a result, a note, a bar chart or a worked line) below the main flow.
 - Put a title at the top-left of each board (text lg at x 50, y 70). Build the diagram in the middle; put the takeaway note

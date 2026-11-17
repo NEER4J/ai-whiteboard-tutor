@@ -230,6 +230,9 @@ export function boardSummary(items: VisibleElement[]): string {
       case "axes":
         t = `graph${el.xLabel || el.yLabel ? ` of ${[el.yLabel, el.xLabel].filter(Boolean).join(" against ")}` : ""}`
         break
+      case "sketch":
+        t = el.label ? `drawing of ${el.label}` : "drawing"
+        break
       case "bars":
         t = `bar chart${el.labels?.length ? ` of ${el.labels.join(", ")}` : ""}`
         break
@@ -258,6 +261,8 @@ export function describe(el: BoardElement): string {
       return "the curve"
     case "icon":
       return el.label ?? `the ${el.name}`
+    case "sketch":
+      return el.label ?? "the drawing"
     case "ellipse":
       return el.label ?? "the oval"
     case "curve":

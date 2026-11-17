@@ -86,6 +86,9 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 | Follow-up answers, quizzes, grading | **Live** — same model, with lesson + position + chat history as context |
 | Narration voice | **Live** — `google/gemini-3.8-flash-lite-tts` via AI Gateway (one clip per segment) |
 | Voice fallback | Browser `speechSynthesis` (local, not AI) if AI speech fails, or if you choose it with the voice button |
+| Home chat | **Live** — talk to Chalk on the home screen (`/api/chat`). The model decides with a `create_lesson` tool whether to answer in text or start a lesson; chat has its own daily caps (`CHAT_PER_IP_DAY`, `GLOBAL_DAILY_CHAT`) and does not use up lesson prompts |
+| Custom drawings | The model is not limited to stock shapes: the `sketch` element lets it draw its own illustrations from SVG-path strokes, which are roughened and animated like everything else |
+| Export as video | Client-side: the board is rendered frame by frame on a canvas, narration is mixed with Web Audio and captured by `MediaRecorder` (MP4/WebM). Runs in the background with a progress ring in the header; nothing is uploaded. Records in real time, so keep the tab open |
 | Hand-drawn rendering, animation, sync | Deterministic client code (rough.js + SVG), no AI at render time |
 | **Sample mode** | If the server has **no AI credentials**, the header shows "Sample mode", every topic plays one **pre-written** lesson ("Why is the sky blue?"), follow-ups return a placeholder, and the browser voice narrates. Nothing in sample mode is presented as AI output. |
 
@@ -208,6 +211,7 @@ playback can be tried with no credentials.
 | `AI_GATEWAY_API_KEY` | for live AI (not needed on Vercel with OIDC) | `vck_xxx` | Vercel AI Gateway key |
 | `LESSON_MODEL` | no | `openai/gpt-6.1-terra` | Text model for lessons and follow-ups (any gateway model id; `deepseek/deepseek-v4.1-flash-1017` is a faster, cheaper alternative) |
 | `LESSON_PROVIDER` | no | the model maker (`openai`) | Gateway provider to pin the model to; `any` lets the gateway choose |
+| `CHAT_PER_IP_DAY` / `GLOBAL_DAILY_CHAT` | no | `40` / `400` | Daily caps on home-chat messages per IP and across everyone |
 | `LESSON_REASONING` | no | `none` | Thinking effort: `none` (fastest), `minimal`, `low`, `medium`, `high` |
 | `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
 | `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |

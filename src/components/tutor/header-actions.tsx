@@ -3,11 +3,35 @@
 import * as React from "react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
-import { CopyIcon, DownloadIcon, MaximizeIcon, MinimizeIcon, MoonIcon, MoreHorizontalIcon, PlusIcon, SunIcon } from "lucide-react"
+import { CheckIcon, CopyIcon, DownloadIcon, FilmIcon, XIcon, MaximizeIcon, MinimizeIcon, MoonIcon, MoreHorizontalIcon, PlusIcon, SunIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { IconButton } from "./icon-button"
+import type { VideoExporter } from "@/lib/use-video-export"
 import type { ChatItem, ClipState } from "./types"
+
+/** Small circular progress loader (0..1). */
+function Ring({ value, className }: { value: number; className?: string }) {
+  const r = 8
+  const c = 2 * Math.PI * r
+  return (
+    <svg viewBox="0 0 20 20" className={className ?? "size-4"} aria-hidden>
+      <circle cx="10" cy="10" r={r} fill="none" strokeWidth="2.5" className="stroke-foreground/15" />
+      <circle
+        cx="10"
+        cy="10"
+        r={r}
+        fill="none"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={c * (1 - Math.min(1, Math.max(0.02, value)))}
+        transform="rotate(-90 10 10)"
+        className="stroke-foreground transition-[stroke-dashoffset] duration-300"
+      />
+    </svg>
+  )
+}
 
 /** Plain-text/Markdown transcript of the lesson and every follow-up. */
 export function buildTranscript(title: string, items: ChatItem[], clips: Record<string, ClipState>) {
@@ -40,9 +64,11 @@ type Props = {
   onNew: () => void
   onFullscreen: () => void
   fullscreen: boolean
+  /** Background video export for the finished lesson (omitted when nothing is ready to export). */
+  exporter?: { api: VideoExporter; run: () => void }
 }
 
-export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscreen, fullscreen }: Props) {
+export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscreen, fullscreen, exporter }: Props) {
   const { resolvedTheme, setTheme } = useTheme()
 
   const copy = async () => {
@@ -82,6 +108,30 @@ export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscre
               <DropdownMenuItem onClick={download}>
                 <DownloadIcon /> Download transcript
               </DropdownMenuItem>
+              {exporter && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    const s = exporter.api.state
+                    if (s.phase === "idle") exporter.run()
+                    else if (s.phase === "done") exporter.api.download(title)
+                    else exporter.api.cancel()
+                  }}
+                >
+                  {exporter.api.state.phase === "working" ? (
+                    <>
+                      <Ring value={exporter.api.state.ratio} /> Exporting {Math.round(exporter.api.state.ratio * 100)}% (tap to cancel)
+                    </>
+                  ) : exporter.api.state.phase === "done" ? (
+                    <>
+                      <DownloadIcon /> Download video
+                    </>
+                  ) : (
+                    <>
+                      <FilmIcon /> Export as video
+                    </>
+                  )}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={toggleTheme}>
                 <SunIcon className="dark:hidden" />
                 <MoonIcon className="hidden dark:block" /> Switch light / dark
@@ -113,6 +163,7 @@ export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscre
             <IconButton label="Download transcript (.md)" onClick={download}>
               <DownloadIcon />
             </IconButton>
+            {exporter && <ExportButton title={title} exporter={exporter} />}
           </>
         )}
         <IconButton label="Toggle light / dark" onClick={toggleTheme}>
@@ -126,5 +177,38 @@ export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscre
         )}
       </div>
     </div>
+  )
+}
+
+function ExportButton({ title, exporter }: { title: string; exporter: NonNullable<Props["exporter"]> }) {
+  const { state, cancel, download, reset } = exporter.api
+  if (state.phase === "working") {
+    const pct = Math.round(state.ratio * 100)
+    return (
+      <div className="mx-1 flex items-center gap-1.5 rounded-lg bg-secondary py-1 pr-1 pl-2.5 text-xs font-medium tabular-nums" role="status" aria-live="polite" title={state.label}>
+        <Ring value={state.ratio} />
+        <span className="min-w-[6.5ch]">Exporting {pct}%</span>
+        <Button variant="ghost" size="icon-xs" aria-label="Cancel export" onClick={cancel}>
+          <XIcon />
+        </Button>
+      </div>
+    )
+  }
+  if (state.phase === "done") {
+    return (
+      <div className="mx-1 flex items-center gap-0.5">
+        <Button size="sm" onClick={() => download(title)}>
+          <CheckIcon data-icon="inline-start" /> Download video
+        </Button>
+        <Button variant="ghost" size="icon-xs" aria-label="Dismiss" onClick={reset}>
+          <XIcon />
+        </Button>
+      </div>
+    )
+  }
+  return (
+    <Button variant="secondary" size="sm" className="mx-1" onClick={exporter.run}>
+      <FilmIcon data-icon="inline-start" /> Export video
+    </Button>
   )
 }

@@ -120,6 +120,23 @@ export class AiVoice implements VoiceEngine {
   }
 }
 
+/** The narration audio for `text` (from the local cache, or generated once). Used by video export. */
+export async function fetchNarrationBlob(text: string): Promise<Blob> {
+  const key = await audioKey(voiceModelId, text).catch(() => null)
+  const cached = key ? await getCachedAudio(key).catch(() => null) : null
+  if (cached) return cached
+  const res = await fetch("/api/tts", {
+    method: "POST",
+    headers: { "content-type": "application/json", ...keyHeaders() },
+    body: JSON.stringify({ text }),
+  })
+  if (res.status === 503 || res.status === 402) throw new VoiceUnavailableError("AI voice unavailable")
+  if (!res.ok) throw new Error(`TTS failed (${res.status})`)
+  const blob = await res.blob()
+  if (key) void putCachedAudio(key, blob)
+  return blob
+}
+
 function measure(url: string) {
   return new Promise<number>((resolve) => {
     const a = new Audio()

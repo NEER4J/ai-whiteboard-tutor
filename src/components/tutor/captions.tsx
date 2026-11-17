@@ -20,7 +20,7 @@ export function Captions({ snap, segments }: { snap: PlayerSnapshot; segments: S
   return (
     <p
       aria-live="off"
-      className="mx-auto max-w-[min(42rem,92%)] rounded-xl bg-background/85 px-3.5 py-2 text-center text-[13px] leading-relaxed text-balance backdrop-blur-sm sm:text-sm"
+      className="mx-auto max-w-[min(52rem,96%)] rounded-xl bg-background/85 px-4 py-2.5 text-center text-base leading-snug font-medium text-balance backdrop-blur-sm sm:text-xl sm:leading-snug"
     >
       {words.map((w, i) => (
         <span key={i} className={cn("transition-colors duration-150", i <= current ? "text-foreground" : "text-muted-foreground/45")}>

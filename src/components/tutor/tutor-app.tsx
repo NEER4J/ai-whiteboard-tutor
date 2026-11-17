@@ -7,6 +7,8 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import type { Attachment } from "@/lib/attachments"
 import { Player } from "@/lib/player"
 import type { BoardElement, LessonRequest, Level } from "@/lib/schema"
+import { videoExportSupported } from "@/lib/export-video"
+import { useVideoExport } from "@/lib/use-video-export"
 import { findSessionByTopic, getSession, saveSession } from "@/lib/sessions"
 import { useUserKey } from "@/lib/byok"
 import { setVoiceModelId } from "@/lib/voice"
@@ -94,6 +96,7 @@ export function TutorApp() {
   const aborts = React.useRef(new Map<string, AbortController>())
 
   const userKey = useUserKey()
+  const videoExport = useVideoExport()
   const [keyDialog, setKeyDialog] = React.useState<{ open: boolean; reason: "quota" | "manual" | "ip" | "capacity" }>({ open: false, reason: "manual" })
 
   /** Mode and free-allowance counts from the server (the cookie travels with the request). */
@@ -381,6 +384,11 @@ export function TutorApp() {
   const activeClip = activeId ? clips[activeId] : undefined
   const lessonTitle = lessonId ? clips[lessonId]?.title ?? topic : null
   const inLesson = !!topic && !!snap
+  // The finished lesson itself (not a follow-up) is what gets exported as a video.
+  const exportClip = lessonId && videoExportSupported() ? clips[lessonId] : undefined
+  const cancelExport = videoExport.cancel
+  React.useEffect(() => cancelExport, [lessonId, cancelExport]) // a different lesson (or leaving) drops any export in progress
+  const exportable = exportClip?.done && exportClip.segments.length ? exportClip : undefined
 
   React.useEffect(() => {
     document.title = lessonTitle ? `${lessonTitle} — Chalk` : "Chalk — AI whiteboard tutor"
@@ -436,6 +444,7 @@ export function TutorApp() {
             onNew={goHome}
             onFullscreen={toggleFullscreen}
             fullscreen={fullscreen}
+            exporter={exportable ? { api: videoExport, run: () => void videoExport.start(exportable.title ?? lessonTitle ?? "Lesson", exportable.segments) } : undefined}
           />
         </header>
 

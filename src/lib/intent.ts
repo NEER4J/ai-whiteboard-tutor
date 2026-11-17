@@ -11,7 +11,13 @@ const ABOUT_ME = /^(who|what)\s+are\s+you\b|\bhow\s+are\s+you\b|\byour\s+name\b|
 
 export type Intent = { ok: true } | { ok: false; reply: string }
 
-export const SUGGESTIONS = ["Why is the sky blue?", "How does a neural network learn?", "How do vaccines work?", "What is compound interest?"]
+/** Prompts picked because they make great pictures: the lesson looks impressive in the first ten seconds. */
+export const SUGGESTIONS = [
+  "How does a jet engine make thrust?",
+  "Inside a beating heart: how blood flows",
+  "How do black holes bend light?",
+  "How does GPS find you from space?",
+]
 
 export function checkTopic(raw: string): Intent {
   const t = raw.trim()

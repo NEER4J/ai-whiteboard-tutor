@@ -2,6 +2,7 @@
 
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +27,15 @@ const COLORS = [
 /** Header control: shows the current chapter and lets you jump to any other one. */
 export function ChapterPicker({ snap, onSelect }: { snap: PlayerSnapshot; onSelect: (chapter: number) => void }) {
   const chapters = snap.timeline.chapters
-  if (!chapters.length) return null
+  // The lesson is still being written: show a placeholder tab so it is clear something is on its way.
+  if (!chapters.length)
+    return (
+      <div className="flex min-w-0 items-center gap-2 px-1.5" role="status" aria-label="Preparing chapters">
+        <Skeleton className="size-5 shrink-0 rounded-full" />
+        <Skeleton className="h-3.5 w-32 max-w-[40vw] rounded-full" />
+        <Skeleton className="hidden h-3 w-8 rounded-full sm:block" />
+      </div>
+    )
   const current = Math.max(0, snap.timeline.boardOfSeg[Math.min(snap.seg, snap.timeline.boardOfSeg.length - 1)] ?? 0)
   const ready = (i: number) => snap.done || chapters[i].firstSeg < snap.available
   const prev = current - 1

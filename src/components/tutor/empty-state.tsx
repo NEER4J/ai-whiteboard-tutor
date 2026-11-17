@@ -1,12 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { BrainCircuitIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Kbd } from "@/components/ui/kbd"
 import type { Attachment } from "@/lib/attachments"
 import { useAttachments } from "@/lib/use-attachments"
-import { checkTopic, SUGGESTIONS } from "@/lib/intent"
+import { keyHeaders } from "@/lib/byok"
+import { SUGGESTIONS } from "@/lib/intent"
 import type { Level } from "@/lib/schema"
 import { AttachButton, AttachmentChips } from "./attachment-chips"
 import { Credit } from "./credit"
@@ -15,33 +14,17 @@ import { LevelSlider } from "./level-slider"
 import { LogoMark } from "./logo"
 import { PromptBox } from "./prompt-box"
 
-// Each card gets its own pastel (light and dark variants written out in full so Tailwind sees them).
-const EXAMPLES = [
-  {
-    text: "Why is the sky blue?",
-    icon: SunIcon,
-    card: "bg-sky-50 hover:bg-sky-100/80 dark:bg-sky-400/10 dark:hover:bg-sky-400/20",
-    iconColor: "text-sky-600 dark:text-sky-300",
-  },
-  {
-    text: "How does a neural network learn?",
-    icon: BrainCircuitIcon,
-    card: "bg-violet-50 hover:bg-violet-100/80 dark:bg-violet-400/10 dark:hover:bg-violet-400/20",
-    iconColor: "text-violet-600 dark:text-violet-300",
-  },
-  {
-    text: "Explain the Pythagorean theorem",
-    icon: RulerIcon,
-    card: "bg-amber-50 hover:bg-amber-100/80 dark:bg-amber-400/10 dark:hover:bg-amber-400/20",
-    iconColor: "text-amber-600 dark:text-amber-300",
-  },
-  {
-    text: "How do vaccines train the immune system?",
-    icon: SyringeIcon,
-    card: "bg-emerald-50 hover:bg-emerald-100/80 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/20",
-    iconColor: "text-emerald-600 dark:text-emerald-300",
-  },
+// Visual, "wow" starters. Each chip has its own pastel (written out in full so Tailwind sees the classes).
+const STARTERS = [
+  { text: "How does a jet engine make thrust?", emoji: "✈️", chip: "bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-400/20" },
+  { text: "Inside a beating heart: how blood flows", emoji: "🫀", chip: "bg-rose-50 hover:bg-rose-100 dark:bg-rose-400/10 dark:hover:bg-rose-400/20" },
+  { text: "How do black holes bend light?", emoji: "🌌", chip: "bg-violet-50 hover:bg-violet-100 dark:bg-violet-400/10 dark:hover:bg-violet-400/20" },
+  { text: "How does GPS find you from space?", emoji: "🛰️", chip: "bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/20" },
+  { text: "How does CRISPR edit DNA?", emoji: "🧬", chip: "bg-amber-50 hover:bg-amber-100 dark:bg-amber-400/10 dark:hover:bg-amber-400/20" },
+  { text: "How does a rocket reach orbit?", emoji: "🚀", chip: "bg-orange-50 hover:bg-orange-100 dark:bg-orange-400/10 dark:hover:bg-orange-400/20" },
 ]
+
+type ChatMsg = { role: "user" | "assistant"; text: string }
 
 const noopSubscribe = () => () => {}
 function greeting() {
@@ -66,18 +49,48 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
   // Time-of-day greeting without a hydration mismatch.
   const hello = React.useSyncExternalStore(noopSubscribe, greeting, () => "Hello")
 
-  const start = (text: string) => {
-    // Greetings, thanks and gibberish never start a lesson.
-    if (!files.length) {
-      const verdict = checkTopic(text)
-      if (!verdict.ok) {
-        setLocalNotice(verdict.reply)
-        return
-      }
-    }
+  const [thread, setThread] = React.useState<ChatMsg[]>([])
+  const [thinking, setThinking] = React.useState(false)
+  const endRef = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }, [thread, thinking])
+
+  /** Everything typed here is a conversation: Chalk answers, or decides to make a lesson (the create_lesson tool). */
+  const send = async (text: string) => {
+    const message = text.trim()
     setLocalNotice(null)
-    const t = text.trim() || (files.length ? `the attached ${files.length > 1 ? "material" : files[0].name}` : "")
-    onStart(t, files.length ? files : undefined)
+    onClearNotice?.()
+    // Attached material always becomes a lesson.
+    if (files.length) {
+      onStart(message || `the attached ${files.length > 1 ? "material" : files[0].name}`, files)
+      return
+    }
+    if (!message || thinking) return
+    setTopic("")
+    const history = thread.slice(-8)
+    setThread((t) => [...t, { role: "user", text: message }])
+    setThinking(true)
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...keyHeaders() },
+        body: JSON.stringify({ message, level, history }),
+      })
+      const data = (await res.json().catch(() => null)) as { reply?: string; lessonTopic?: string; error?: string } | null
+      if (!res.ok || !data) throw new Error(data?.error ?? "Chalk couldn't reply just now. Please try again.")
+      if (data.reply) setThread((t) => [...t, { role: "assistant", text: data.reply! }])
+      if (data.lessonTopic) {
+        // Let the reply be seen for a beat, then start the lesson.
+        await new Promise((r) => setTimeout(r, 900))
+        onStart(data.lessonTopic)
+        setThread([])
+      }
+    } catch (e) {
+      setThread((t) => [...t, { role: "assistant", text: (e as Error).message }])
+    } finally {
+      setThinking(false)
+    }
   }
 
   return (
@@ -112,16 +125,13 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
               onClearNotice?.()
             }
           }}
-          onSubmit={() => start(topic)}
-          placeholder="Teach me how black holes form…"
+          onSubmit={() => void send(topic)}
+          placeholder="Ask anything, or say what you want to learn…"
           onPasteFiles={add}
           header={files.length ? <AttachmentChips files={files} onRemove={remove} /> : undefined}
           addon={
             <>
               <AttachButton onFiles={add} />
-              <span className="ml-1 hidden items-center gap-1.5 text-sm text-muted-foreground sm:flex">
-                <Kbd>↵</Kbd> to start
-              </span>
             </>
           }
           endAddon={<LevelSlider level={level} setLevel={setLevel} />}
@@ -148,20 +158,54 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
           </div>
         )}
 
-        <div className="flex flex-col gap-3">
-          <p className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Get started with an example</p>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {EXAMPLES.map(({ text, icon: Icon, card, iconColor }) => (
-              <button
-                key={text}
-                type="button"
-                onClick={() => onStart(text)}
-                className={cn("group flex min-h-28 flex-col justify-between gap-4 rounded-2xl p-4 text-left text-sm leading-snug text-foreground/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none", card)}>
-                <span>{text}</span>
-                <Icon className={cn("size-[18px]", iconColor)} />
-              </button>
-            ))}
+        {thread.length > 0 && (
+          <div className="-mt-4 flex flex-col gap-3" aria-live="polite">
+            {thread.map((m, i) =>
+              m.role === "user" ? (
+                <div key={i} className="ml-auto max-w-[85%] animate-in rounded-2xl rounded-br-md bg-muted px-4 py-2.5 text-sm duration-200 fade-in slide-in-from-bottom-1">
+                  {m.text}
+                </div>
+              ) : (
+                <div key={i} className="flex animate-in gap-3 rounded-2xl bg-muted/50 p-3.5 duration-300 fade-in slide-in-from-bottom-1 dark:bg-muted/30">
+                  <LogoMark className="mt-0.5 h-5 w-6 shrink-0 text-foreground" />
+                  <p className="min-w-0 text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
+                </div>
+              )
+            )}
+            {thinking && (
+              <div className="flex items-center gap-3 px-3.5 py-1" role="status" aria-label="Chalk is typing">
+                <LogoMark className="h-5 w-6 shrink-0 text-muted-foreground" />
+                <span className="flex gap-1">
+                  {[0, 1, 2].map((d) => (
+                    <span key={d} className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60" style={{ animationDelay: `${d * 120}ms` }} />
+                  ))}
+                </span>
+              </div>
+            )}
+            <div ref={endRef} />
           </div>
+        )}
+
+        {shownNotice && thread.length === 0 && (
+          <div className="-mt-4 flex animate-in gap-3 rounded-2xl bg-muted/60 p-3.5 duration-300 fade-in slide-in-from-top-1 dark:bg-muted/40" role="status">
+            <LogoMark className="mt-0.5 h-5 w-6 shrink-0 text-foreground" />
+            <p className="text-sm leading-relaxed">{shownNotice}</p>
+          </div>
+        )}
+
+        <div className="-mt-3 flex flex-wrap gap-2" aria-label="Suggested topics">
+          {STARTERS.map(({ text, emoji, chip }) => (
+            <button
+              key={text}
+              type="button"
+              disabled={thinking}
+              onClick={() => onStart(text)}
+              className={cn("flex items-center gap-2 rounded-full px-3.5 py-2 text-sm text-foreground/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50", chip)}
+            >
+              <span aria-hidden>{emoji}</span>
+              {text}
+            </button>
+          ))}
         </div>
       </div>
       <Credit className="relative mt-2 mb-2 md:hidden" />

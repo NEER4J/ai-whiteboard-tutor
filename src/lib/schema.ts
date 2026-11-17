@@ -110,6 +110,31 @@ export const iconElement = z.object({
   label: z.string().optional().describe("Caption drawn under the icon"),
 })
 
+export const sketchElement = z.object({
+  type: z.literal("sketch"),
+  ...base,
+  x: z.number().describe("Top-left x of the drawing's box on the board"),
+  y: z.number().describe("Top-left y of the drawing's box on the board"),
+  w: z.number().describe("Box width in px (60-420). The drawing is stretched to fit this box"),
+  h: z.number().describe("Box height in px (60-300)"),
+  strokes: z
+    .array(
+      z.object({
+        d: z
+          .string()
+          .describe(
+            "SVG path data in a local 0-100 x 0-100 space (0,0 top-left): M, L, H, V, C, Q, A, Z (absolute or relative). Draw your OWN shape here."
+          ),
+        color: colorSchema.optional().describe("Stroke colour; defaults to the element colour"),
+        fill: z.boolean().optional().describe("true = hatch-fill the closed shape for emphasis"),
+      })
+    )
+    .min(1)
+    .max(40)
+    .describe("Strokes drawn one after another. Compose a custom illustration from many strokes."),
+  label: z.string().optional().describe("Caption drawn under the drawing"),
+})
+
 export const ellipseElement = z.object({
   type: z.literal("ellipse"),
   ...base,
@@ -182,6 +207,7 @@ export const elementSchema = z.discriminatedUnion("type", [
   pathElement,
   axesElement,
   iconElement,
+  sketchElement,
   ellipseElement,
   curveElement,
   noteElement,

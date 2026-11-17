@@ -356,6 +356,38 @@ function build(el: BoardElement, target: BoardElement | undefined, lookup: (id: 
       }
       return { strokes, texts, bbox }
     }
+    case "sketch": {
+      const sx = clamp(el.w, 40, 480) / 100
+      const sy = clamp(el.h, 40, 340) / 100
+      const strokes: Stroke[] = []
+      el.strokes.slice(0, 40).forEach((st, i) => {
+        let drawable: Drawable
+        try {
+          drawable = gen.path(st.d, opts(`${el.id}:${i}`, { roughness: 0.6, strokeWidth: 2.4, ...(st.fill ? { fill: "x", fillStyle: "hachure", hachureGap: 7 } : {}) }))
+        } catch {
+          return // a malformed path is skipped rather than breaking the board
+        }
+        for (const set of drawable.sets) {
+          for (const o of set.ops) {
+            for (let j = 0; j + 1 < o.data.length; j += 2) {
+              o.data[j] = el.x + o.data[j] * sx
+              o.data[j + 1] = el.y + o.data[j + 1] * sy
+            }
+          }
+        }
+        strokes.push(...toStrokes(drawable, st.color ?? el.color ?? "ink"))
+      })
+      const w = clamp(el.w, 40, 480)
+      const h = clamp(el.h, 40, 340)
+      const texts: TextRun[] = []
+      let bbox: BBox = { x: el.x, y: el.y, w, h }
+      if (el.label) {
+        const run: TextRun = { x: el.x + w / 2, y: el.y + h + 24, lines: wrapText(el.label, Math.max(8, Math.floor((w + 50) / (FONT_PX.sm * CHAR_W)))), size: FONT_PX.sm, anchor: "middle", color: "ink" }
+        texts.push(run)
+        bbox = union(bbox, textBox(run))
+      }
+      return { strokes, texts, bbox }
+    }
     case "highlight": {
       if (!target || target.type === "highlight") return { strokes: [], texts: [], bbox: { x: 0, y: 0, w: 0, h: 0 } }
       const b = shapeOf(target, lookup).bbox

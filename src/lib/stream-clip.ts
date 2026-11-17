@@ -121,6 +121,8 @@ function clampElement(el: BoardElement): BoardElement {
       return { ...el, x: cx(el.x), y: cy(el.y) }
     case "icon":
       return { ...el, x: cx(el.x), y: cy(el.y) }
+    case "sketch":
+      return { ...el, x: cx(el.x), y: cy(el.y), w: Math.max(40, Math.min(el.w, BOARD_W - el.x)), h: Math.max(40, Math.min(el.h, BOARD_H - el.y)) }
     case "ellipse":
       return { ...el, cx: cx(el.cx), cy: cy(el.cy), rx: Math.max(4, Math.min(el.rx, 400)), ry: Math.max(4, Math.min(el.ry, 280)) }
     case "curve":
