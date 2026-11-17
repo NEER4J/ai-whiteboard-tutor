@@ -334,7 +334,7 @@ export function TutorApp() {
   }, [lessonTitle])
 
   return (
-    <SidebarProvider defaultOpen className="h-dvh min-h-0 [--board-panel:#fafafa] dark:[--board-panel:var(--color-zinc-800)]">
+    <SidebarProvider defaultOpen className="h-dvh min-h-0 [--board-panel:#f4f4f5] dark:[--board-panel:var(--color-zinc-800)]">
       <AppSidebar activeId={lessonId} status={status} onNew={goHome} onOpen={(id) => openSession(id)} />
       <SidebarInset className="min-h-0 min-w-0 overflow-hidden border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
         <header className="flex h-12 shrink-0 items-center px-3">

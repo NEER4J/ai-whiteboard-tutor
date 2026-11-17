@@ -216,7 +216,7 @@ function LessonCard({
   if (!chapters.length && !generating) return null
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-2xl bg-[#fafafa] p-1.5 dark:bg-white/[0.08]">
+    <div className="flex flex-col gap-1.5 rounded-2xl bg-[#f4f4f5] p-1.5 dark:bg-white/[0.08]">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-2 pt-1.5 pb-1 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">Lesson outline</span>
         {chapters.length > 0 && (
