@@ -40,8 +40,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
+import { GITHUB_URL } from "@/lib/site"
 import { clearSessions, deleteSession, groupByDay, useSessionList } from "@/lib/sessions"
 import { Credit } from "./credit"
+import { GithubMark } from "./github-icon"
 import { UsageCard } from "./usage-card"
 import { Logo } from "./logo"
 
@@ -164,6 +166,26 @@ export function AppSidebar({ activeId, status, userKey, onManageKey, onNew, onOp
       </SidebarContent>
 
       <SidebarFooter className="gap-2 px-3 pb-3">
+        {/* Resources */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <a
+            href="/docs"
+            target="_blank"
+            rel="noopener"
+            className="flex h-8 items-center justify-center gap-1.5 rounded-lg bg-sidebar-accent/60 text-xs font-medium transition-colors hover:bg-sidebar-accent"
+          >
+            <BookOpenIcon className="size-3.5" /> Docs
+          </a>
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-8 items-center justify-center gap-1.5 rounded-lg bg-sidebar-accent/60 text-xs font-medium transition-colors hover:bg-sidebar-accent"
+          >
+            <GithubMark className="size-3.5" /> GitHub
+          </a>
+        </div>
+
         {/* Settings first, then a compact info card */}
         <SidebarMenu>
           <SidebarMenuItem>

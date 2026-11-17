@@ -1,6 +1,6 @@
 # Chalk — an AI whiteboard tutor
 
-Created by [Neeraj](https://www.itsneeraj.com/).
+Created by [Neeraj](https://www.itsneeraj.com/) · [MIT licensed](LICENSE) · [Documentation](https://github.com/NEER4J/ai-whiteboard-tutor#readme)
 
 Type any topic and Chalk teaches it the way a good teacher does at a whiteboard:
 it **talks you through it while drawing**, building a diagram up piece by piece in
@@ -189,6 +189,7 @@ playback can be tried with no credentials.
 | `FREE_LESSONS` | no | `16` | Free lessons per visitor before they must add their own key |
 | `FREE_FOLLOWUPS` | no | `48` | Free follow-up questions per visitor |
 | `USAGE_SECRET` | recommended in production | any long random string | Signs the usage cookie (falls back to the gateway key) |
+| `NEXT_PUBLIC_SITE_URL` | recommended once you have a domain | `https://chalk.example.com` | Public origin for canonical, social preview and sitemap URLs (on Vercel the production URL is used automatically) |
 | `MOCK_AI` | no | `1` | Force sample mode |
 
 ### Deploying
@@ -210,6 +211,11 @@ A two-minute lesson is roughly 1,800 characters of narration. Approximate list p
 | Lesson text | `anthropic/claude-haiku-5.5`, thinking off | well under $0.01 |
 
 Narration is requested once per segment and cached for the tab, so replaying, seeking and restarting cost nothing extra; reopening a saved lesson later re-requests the audio.
+
+## Docs, SEO and sharing
+
+- **In-app documentation** lives at `/docs` (linked from the sidebar next to the GitHub link): usage, shortcuts, free limits and your own key, how it works, privacy and self-hosting.
+- **SEO:** page titles and descriptions, canonical URLs, Open Graph and Twitter cards, a generated 1200x630 preview image (`/og`), favicon, Apple touch icon, web manifest, `robots.txt`, `sitemap.xml` and JSON-LD structured data. Individual lesson pages (`/lesson/<id>`) are `noindex` because they live in the visitor's browser.
 
 ## Limits and bring-your-own-key
 
@@ -242,3 +248,7 @@ a demo; for a hard guarantee, move the counters into a shared store (Vercel KV /
 - **Quota is cookie + per-instance memory.** See "Limits and bring-your-own-key"; production would use a shared store (Redis/KV) and bot protection.
 - **No math typesetting** on the board; formulas are handwritten text.
 - **English only** for now; the schema and voices support other languages.
+
+## License
+
+[MIT](LICENSE) © 2026 Neeraj Sharma. Free to use, modify and share; keep the copyright notice.

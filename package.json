@@ -36,5 +36,13 @@
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
-  }
+  },
+  "license": "MIT",
+  "author": "Neeraj Sharma <https://www.itsneeraj.com/>",
+  "homepage": "https://github.com/NEER4J/ai-whiteboard-tutor#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NEER4J/ai-whiteboard-tutor.git"
+  },
+  "description": "Chalk: an AI tutor that teaches any topic with synchronized voice narration and an interactive whiteboard."
 }
