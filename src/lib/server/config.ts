@@ -1,7 +1,7 @@
 import "server-only"
 
 /** Text model used for lessons and follow-ups (any Vercel AI Gateway model id). */
-export const LESSON_MODEL = process.env.LESSON_MODEL || "deepseek/deepseek-v4.1-flash-1017"
+export const LESSON_MODEL = process.env.LESSON_MODEL || "openai/gpt-6.1-terra"
 /**
  * Gateway provider to route the lesson model through (the gateway's "only" option). Defaults to
  * the model's own maker; set LESSON_PROVIDER to another gateway provider slug, or "any" for no pin.

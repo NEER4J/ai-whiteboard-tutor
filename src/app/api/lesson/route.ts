@@ -80,7 +80,11 @@ export async function POST(req: Request) {
   const result = streamText({
     model: gw ? gw(LESSON_MODEL) : LESSON_MODEL,
     reasoning: LESSON_REASONING,
-    ...(LESSON_PROVIDERS ? { providerOptions: { gateway: { only: LESSON_PROVIDERS } } } : {}),
+    providerOptions: {
+      ...(LESSON_PROVIDERS ? { gateway: { only: LESSON_PROVIDERS } } : {}),
+      // Our board schema has optional fields, which OpenAI's strict mode rejects.
+      openai: { strictJsonSchema: false },
+    },
     system: isLesson ? lessonSystemPrompt(body.level) : followupSystemPrompt(body.level),
     ...(media.length
       ? {

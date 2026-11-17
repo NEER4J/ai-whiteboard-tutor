@@ -48,7 +48,7 @@ import { GithubMark } from "./github-icon"
 import { UsageCard } from "./usage-card"
 import { Logo } from "./logo"
 
-export type Quota = { prompts: { used: number; limit: number } }
+export type Quota = { prompts: { used: number; limit: number }; network?: boolean }
 export type AppStatus = { mode: "live" | "sample"; model: string | null; voice?: string | null; quota?: Quota | null } | null
 type Status = AppStatus
 

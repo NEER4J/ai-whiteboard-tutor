@@ -60,6 +60,25 @@ export async function incr(key: string, ttlSeconds: number): Promise<number> {
   return memIncr(key, ttlSeconds)
 }
 
+/** Current value of a counter without changing it (0 if unset). */
+export async function peek(key: string): Promise<number> {
+  if (URL_ && TOKEN) {
+    try {
+      const res = await fetch(`${URL_}/get/${encodeURIComponent(key)}`, {
+        headers: { authorization: `Bearer ${TOKEN}` },
+        cache: "no-store",
+      })
+      const data = (await res.json()) as { result?: string | number | null }
+      const n = Number(data?.result ?? 0)
+      if (Number.isFinite(n)) return n
+    } catch {
+      // fall through to memory
+    }
+  }
+  const hit = mem.get(key)
+  return hit && hit.exp > Date.now() ? hit.n : 0
+}
+
 /** Stable, non-reversible id for an IP address (we never store raw IPs). */
 export const hashIp = (ip: string) => createHash("sha256").update(`chalk:${ip}`).digest("hex").slice(0, 16)
 
