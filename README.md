@@ -259,7 +259,7 @@ verified with a one-word request, kept only in the visitor's browser, and sent i
 gateway on their account. It is never stored or logged, and it bypasses the free limits (they pay for their own usage).
 
 Counters for the per-IP and global layers live in **Upstash Redis / Vercel KV** when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
-(or `KV_REST_API_URL` + `KV_REST_API_TOKEN`) are set, so every serverless instance sees the same numbers. Without it they fall back to
+(or `KV_REST_API_URL` + `KV_REST_API_TOKEN`, with or without a custom prefix such as `STORAGE_`) are set, so every serverless instance sees the same numbers. Without it they fall back to
 in-memory counters, which is fine locally but only a partial safeguard on serverless. For a hard guarantee also set a spend budget on the
 AI Gateway key itself.
 

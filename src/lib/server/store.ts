@@ -10,8 +10,19 @@ import { createHash } from "node:crypto"
  * - Without it, counters live in this instance's memory: fine for local development, only a partial
  *   safeguard on serverless.
  */
-const URL_ = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
-const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
+/**
+ * Finds the Redis REST credentials in the environment. Vercel's Upstash integration names them with an
+ * optional custom prefix (KV_REST_API_URL, STORAGE_REST_API_URL, MYAPP_KV_REST_API_URL, ...), so match by suffix
+ * instead of an exact name. The read-only token is never used.
+ */
+export function findRedisEnv(env: Record<string, string | undefined>) {
+  const names = Object.keys(env)
+  const url = names.find((k) => /(REST_API_URL|REDIS_REST_URL)$/.test(k) && env[k])
+  const token = names.find((k) => /(REST_API_TOKEN|REDIS_REST_TOKEN)$/.test(k) && !/READ_ONLY/.test(k) && env[k])
+  return { url: url ? env[url] : undefined, token: token ? env[token] : undefined }
+}
+
+const { url: URL_, token: TOKEN } = findRedisEnv(process.env)
 
 export const sharedStoreConfigured = Boolean(URL_ && TOKEN)
 

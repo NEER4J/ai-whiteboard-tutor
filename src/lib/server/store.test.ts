@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { _resetMemoryStore, hashIp, incr, today } from "./store"
+import { _resetMemoryStore, findRedisEnv, hashIp, incr, today } from "./store"
 
 describe("counter store (in-memory fallback)", () => {
   beforeEach(() => {
@@ -30,5 +30,26 @@ describe("helpers", () => {
   })
   it("formats today as a date key", () => {
     expect(today()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})
+
+describe("findRedisEnv", () => {
+  it("finds the standard Vercel KV / Upstash names", () => {
+    expect(findRedisEnv({ KV_REST_API_URL: "https://x", KV_REST_API_TOKEN: "t" })).toEqual({ url: "https://x", token: "t" })
+    expect(findRedisEnv({ UPSTASH_REDIS_REST_URL: "https://y", UPSTASH_REDIS_REST_TOKEN: "u" })).toEqual({ url: "https://y", token: "u" })
+  })
+
+  it("finds credentials created with a custom prefix", () => {
+    expect(findRedisEnv({ STORAGE_REST_API_URL: "https://z", STORAGE_REST_API_TOKEN: "v" })).toEqual({ url: "https://z", token: "v" })
+    expect(findRedisEnv({ CHALK_KV_REST_API_URL: "https://z", CHALK_KV_REST_API_TOKEN: "v" })).toEqual({ url: "https://z", token: "v" })
+  })
+
+  it("never picks the read-only token", () => {
+    const r = findRedisEnv({ KV_REST_API_URL: "https://x", KV_REST_API_READ_ONLY_TOKEN: "ro", KV_REST_API_TOKEN: "rw" })
+    expect(r.token).toBe("rw")
+  })
+
+  it("returns nothing when Redis is not configured", () => {
+    expect(findRedisEnv({ NODE_ENV: "test" })).toEqual({ url: undefined, token: undefined })
   })
 })
