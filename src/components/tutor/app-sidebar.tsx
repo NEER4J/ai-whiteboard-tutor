@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { clearSessions, deleteSession, groupByDay, useSessionList } from "@/lib/sessions"
+import { Credit } from "./credit"
 import { Logo } from "./logo"
 
 type Status = { mode: "live" | "sample"; model: string | null } | null
@@ -206,6 +207,7 @@ export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
             Your lessons are saved only in this browser.
           </p>
         </div>
+        <Credit className="-ml-1 self-start" />
       </SidebarFooter>
     </Sidebar>
   )

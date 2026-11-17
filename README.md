@@ -1,5 +1,7 @@
 # Chalk — an AI whiteboard tutor
 
+Created by [Neeraj](https://www.itsneeraj.com/).
+
 Type any topic and Chalk teaches it the way a good teacher does at a whiteboard:
 it **talks you through it while drawing**, building a diagram up piece by piece in
 sync with its voice. A lesson is about two minutes long. You can pause, scrub,

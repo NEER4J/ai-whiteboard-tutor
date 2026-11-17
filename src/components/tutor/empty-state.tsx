@@ -9,6 +9,7 @@ import { useAttachments } from "@/lib/use-attachments"
 import { checkTopic, SUGGESTIONS } from "@/lib/intent"
 import type { Level } from "@/lib/schema"
 import { AttachButton, AttachmentChips } from "./attachment-chips"
+import { Credit } from "./credit"
 import { BoardDoodles } from "./board-doodles"
 import { LevelSlider } from "./level-slider"
 import { PromptBox } from "./prompt-box"
@@ -157,6 +158,7 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
           </div>
         </div>
       </div>
+      <Credit className="relative mt-2 mb-2 md:hidden" />
     </div>
   )
 }
