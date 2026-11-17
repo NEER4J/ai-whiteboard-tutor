@@ -17,6 +17,10 @@ import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 import type { PlayerSnapshot } from "@/lib/player"
 import { buildTimeline, formatTime } from "@/lib/timeline"
+import type { Attachment } from "@/lib/attachments"
+import { useAttachments } from "@/lib/use-attachments"
+import { FileTextIcon } from "lucide-react"
+import { AttachButton, AttachmentChips } from "./attachment-chips"
 import { MarkdownLite } from "./markdown-lite"
 import { PromptBox } from "./prompt-box"
 import type { ChatItem, ClipState } from "./types"
@@ -28,7 +32,7 @@ type Props = {
   snap: PlayerSnapshot
   input: string
   setInput: (v: string) => void
-  onSend: (text: string) => void
+  onSend: (text: string, attachments?: Attachment[]) => void
   onPlayClip: (clipId: string) => void
   onChapter: (clipId: string, chapter: number) => void
   onRetry: (clipId: string) => void
@@ -45,6 +49,11 @@ const QUICK = [
 
 export function ChatPanel(props: Props) {
   const { items, clips, input, setInput, onSend, busy, onStop, textareaRef } = props
+  const { files, add, remove, clear } = useAttachments()
+  const send = (text: string) => {
+    onSend(text, files.length ? files : undefined)
+    clear()
+  }
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <MessageScrollerProvider autoScroll>
@@ -59,6 +68,16 @@ export function ChatPanel(props: Props) {
                         <Bubble align="end" variant="muted">
                           <BubbleContent className="rounded-2xl px-3.5">{item.text}</BubbleContent>
                         </Bubble>
+                        {item.files?.length ? (
+                          <div className="flex flex-wrap justify-end gap-1">
+                            {item.files.map((n, i) => (
+                              <span key={`${n}-${i}`} className="inline-flex max-w-44 items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                                <FileTextIcon className="size-3 shrink-0" />
+                                <span className="truncate">{n}</span>
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
                       </MessageContent>
                     </Message>
                   ) : (
@@ -81,7 +100,7 @@ export function ChatPanel(props: Props) {
               size="sm"
               className="shrink-0 rounded-full font-normal"
               disabled={busy}
-              onClick={() => onSend(q.text)}
+              onClick={() => send(q.text)}
             >
               {q.label}
             </Button>
@@ -91,7 +110,11 @@ export function ChatPanel(props: Props) {
           textareaRef={textareaRef}
           value={input}
           onChange={setInput}
-          onSubmit={() => onSend(input)}
+          onSubmit={() => send(input)}
+          allowEmpty={files.length > 0}
+          onPasteFiles={add}
+          header={files.length ? <AttachmentChips files={files} onRemove={remove} /> : undefined}
+          addon={<AttachButton onFiles={add} />}
           placeholder="Ask a follow-up question…"
           busy={busy}
           onStop={onStop}

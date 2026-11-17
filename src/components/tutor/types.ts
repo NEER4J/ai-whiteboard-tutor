@@ -14,7 +14,7 @@ export type ClipState = {
 }
 
 export type ChatItem =
-  | { id: string; role: "user"; text: string }
+  | { id: string; role: "user"; text: string; files?: string[] }
   | { id: string; role: "assistant"; clipId: string }
 
 export type Session = {

@@ -157,7 +157,7 @@ export const lessonRequestSchema = z.object({
   mode: z.enum(["lesson", "followup"]),
   topic: z.string().trim().min(2).max(300),
   level: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
-  /** material the learner wants the lesson to be based on (lesson mode only) */
+  /** material the learner attached to this message (lesson or follow-up) */
   attachments: z.array(attachmentSchema).max(3).optional(),
   /** follow-up only */
   question: z.string().trim().max(500).optional(),

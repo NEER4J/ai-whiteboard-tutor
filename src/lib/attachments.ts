@@ -36,3 +36,23 @@ export async function readAttachment(file: File): Promise<Attachment> {
     size: file.size,
   }
 }
+
+/** Adds files to an existing list, enforcing count/size limits. Never throws; returns user-facing errors. */
+export async function mergeAttachments(existing: Attachment[], files: File[]) {
+  let next = [...existing]
+  const errors: string[] = []
+  for (const f of files) {
+    try {
+      if (next.length >= MAX_FILES) throw new AttachmentError(`You can attach up to ${MAX_FILES} files.`)
+      const a = await readAttachment(f)
+      if (next.some((x) => x.id === a.id)) continue
+      if (next.reduce((n, x) => n + x.size, 0) + a.size > MAX_TOTAL_BYTES) {
+        throw new AttachmentError("Attachments are limited to 3 MB in total.")
+      }
+      next = [...next, a]
+    } catch (err) {
+      errors.push(err instanceof Error ? err.message : "Couldn't attach that file.")
+    }
+  }
+  return { next, errors }
+}

@@ -1,15 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { BrainCircuitIcon, PaperclipIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
-import { toast } from "sonner"
+import { BrainCircuitIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { ACCEPT, AttachmentError, MAX_FILES, MAX_TOTAL_BYTES, readAttachment, type Attachment } from "@/lib/attachments"
+import type { Attachment } from "@/lib/attachments"
+import { useAttachments } from "@/lib/use-attachments"
 import type { Level } from "@/lib/schema"
-import { AttachmentChips } from "./attachment-chips"
+import { AttachButton, AttachmentChips } from "./attachment-chips"
 import { BoardDoodles } from "./board-doodles"
 import { LevelSlider } from "./level-slider"
 import { PromptBox } from "./prompt-box"
@@ -56,30 +54,9 @@ type Props = {
 
 export function EmptyState({ level, setLevel, onStart }: Props) {
   const [topic, setTopic] = React.useState("")
-  const [files, setFiles] = React.useState<Attachment[]>([])
-  const fileInput = React.useRef<HTMLInputElement>(null)
+  const { files, add, remove } = useAttachments()
   // Time-of-day greeting without a hydration mismatch.
   const hello = React.useSyncExternalStore(noopSubscribe, greeting, () => "Hello")
-
-  const addFiles = async (list: FileList | null) => {
-    if (!list?.length) return
-    let next = [...files]
-    for (const f of Array.from(list)) {
-      try {
-        if (next.length >= MAX_FILES) throw new AttachmentError(`You can attach up to ${MAX_FILES} files.`)
-        const a = await readAttachment(f)
-        if (next.some((x) => x.id === a.id)) continue
-        if (next.reduce((n, x) => n + x.size, 0) + a.size > MAX_TOTAL_BYTES) {
-          throw new AttachmentError("Attachments are limited to 3 MB in total.")
-        }
-        next = [...next, a]
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Couldn't attach that file.")
-      }
-    }
-    setFiles(next)
-    if (fileInput.current) fileInput.current.value = ""
-  }
 
   const start = (text: string) => {
     const t = text.trim() || (files.length ? `the attached ${files.length > 1 ? "material" : files[0].name}` : "")
@@ -107,36 +84,11 @@ export function EmptyState({ level, setLevel, onStart }: Props) {
           onChange={setTopic}
           onSubmit={() => start(topic)}
           placeholder="Teach me how black holes form…"
-          header={files.length ? <AttachmentChips files={files} onRemove={(id) => setFiles((fs) => fs.filter((f) => f.id !== id))} /> : undefined}
+          onPasteFiles={add}
+          header={files.length ? <AttachmentChips files={files} onRemove={remove} /> : undefined}
           addon={
             <>
-              <input
-                ref={fileInput}
-                type="file"
-                multiple
-                accept={ACCEPT}
-                className="sr-only"
-                tabIndex={-1}
-                aria-hidden
-                onChange={(e) => addFiles(e.target.files)}
-              />
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="size-9 rounded-xl bg-background"
-                      aria-label="Attach files"
-                      onClick={() => fileInput.current?.click()}
-                    />
-                  }
-                >
-                  <PaperclipIcon />
-                </TooltipTrigger>
-                <TooltipContent>Attach notes, a PDF or an image</TooltipContent>
-              </Tooltip>
+              <AttachButton onFiles={add} />
               <span className="ml-1 hidden items-center gap-1.5 text-sm text-muted-foreground sm:flex">
                 <Kbd>↵</Kbd> to start
               </span>

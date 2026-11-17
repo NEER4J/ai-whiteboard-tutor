@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
   const isLesson = body.mode === "lesson"
   const userText = isLesson ? lessonUserPrompt(body) : followupUserPrompt(body)
-  const media = isLesson ? (body.attachments ?? []).filter((a) => a.kind !== "text") : []
+  const media = (body.attachments ?? []).filter((a) => a.kind !== "text")
   const result = streamText({
     model: LESSON_MODEL,
     system: isLesson ? lessonSystemPrompt(body.level) : followupSystemPrompt(body.level),

@@ -182,7 +182,7 @@ export function TutorApp() {
     setTopic(t)
     setLessonId(id)
     setItems([
-      { id: newId("u"), role: "user", text: t },
+      { id: newId("u"), role: "user", text: t, files: attachments?.map((a) => a.name) },
       { id: newId("a"), role: "assistant", clipId: id },
     ])
     run(id, {
@@ -209,8 +209,8 @@ export function TutorApp() {
     activate(saved.lessonId, restored[saved.lessonId], false)
   }
 
-  const ask = (raw: string) => {
-    const q = raw.trim()
+  const ask = (raw: string, attachments?: Attachment[]) => {
+    const q = raw.trim() || (attachments?.length ? "Can you explain what I attached?" : "")
     if (q.length < 2 || !topic || busy) return
     const lesson = lessonId ? clipsRef.current[lessonId] : undefined
     const active = activeRef.current ? clipsRef.current[activeRef.current] : undefined
@@ -223,13 +223,18 @@ export function TutorApp() {
       )
       .filter((m) => m.text)
     const id = newId("followup")
-    setItems((xs) => [...xs, { id: newId("u"), role: "user", text: q }, { id: newId("a"), role: "assistant", clipId: id }])
+    setItems((xs) => [
+      ...xs,
+      { id: newId("u"), role: "user", text: q, files: attachments?.map((a) => a.name) },
+      { id: newId("a"), role: "assistant", clipId: id },
+    ])
     setInput("")
     run(id, {
       mode: "followup",
       topic,
       level,
       question: q,
+      attachments: attachments?.map(({ name, kind, mediaType, data }) => ({ name, kind, mediaType, data })),
       lesson: lesson ? { title: lesson.title ?? topic, narration: lesson.segments.map((s) => s.narration) } : undefined,
       currentNarration: active?.segments[snap?.seg ?? 0]?.narration,
       history,
@@ -278,7 +283,6 @@ export function TutorApp() {
             </>
           )}
           <HeaderActions
-            status={status}
             inLesson={inLesson}
             title={lessonTitle ?? "Lesson"}
             items={items}

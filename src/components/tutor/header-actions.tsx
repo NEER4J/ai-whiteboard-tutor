@@ -4,12 +4,9 @@ import * as React from "react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 import { CopyIcon, DownloadIcon, MaximizeIcon, MinimizeIcon, MoonIcon, PlusIcon, SunIcon } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { IconButton } from "./icon-button"
 import type { ChatItem, ClipState } from "./types"
-
-type Status = { mode: "live" | "sample"; model: string | null } | null
 
 /** Plain-text/Markdown transcript of the lesson and every follow-up. */
 export function buildTranscript(title: string, items: ChatItem[], clips: Record<string, ClipState>) {
@@ -35,7 +32,6 @@ export function buildTranscript(title: string, items: ChatItem[], clips: Record<
 }
 
 type Props = {
-  status: Status
   inLesson: boolean
   title: string
   items: ChatItem[]
@@ -45,7 +41,7 @@ type Props = {
   fullscreen: boolean
 }
 
-export function HeaderActions({ status, inLesson, title, items, clips, onNew, onFullscreen, fullscreen }: Props) {
+export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscreen, fullscreen }: Props) {
   const { resolvedTheme, setTheme } = useTheme()
 
   const copy = async () => {
@@ -69,12 +65,6 @@ export function HeaderActions({ status, inLesson, title, items, clips, onNew, on
 
   return (
     <div className="ml-auto flex items-center gap-0.5">
-      {status && !inLesson && (
-        <Badge variant="secondary" className="mr-1 font-normal text-muted-foreground">
-          <span className={status.mode === "live" ? "size-1.5 rounded-full bg-emerald-500" : "size-1.5 rounded-full bg-amber-500"} />
-          {status.mode === "live" ? "Live AI" : "Sample mode"}
-        </Badge>
-      )}
       {inLesson && (
         <>
           <IconButton label={fullscreen ? "Exit full screen" : "Full-screen whiteboard"} onClick={onFullscreen}>

@@ -24,6 +24,8 @@ type Props = {
   header?: React.ReactNode;
   /** allow sending with no text (e.g. when a file is attached) */
   allowEmpty?: boolean;
+  /** called with files pasted from the clipboard (e.g. a screenshot) */
+  onPasteFiles?: (files: File[]) => void;
   /** visual size: 'lg' is the tall hero box on the home screen */
   size?: "md" | "lg";
   className?: string;
@@ -44,6 +46,7 @@ export function PromptBox({
   endAddon,
   header,
   allowEmpty,
+  onPasteFiles,
   size = "md",
   className,
   autoFocus,
@@ -91,6 +94,13 @@ export function PromptBox({
             maxLength={500}
             rows={1}
             onChange={(e) => onChange(e.target.value)}
+          onPaste={(e) => {
+            const files = Array.from(e.clipboardData.files)
+            if (files.length && onPasteFiles) {
+              e.preventDefault()
+              onPasteFiles(files)
+            }
+          }}
             onKeyDown={(e) => {
               if (
                 e.key === "Enter" &&

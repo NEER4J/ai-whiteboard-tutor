@@ -114,14 +114,18 @@ type Placed = { id: string; color: string; node: React.ReactNode; x: number; y: 
 
 function makeLayout(): Placed[] {
   const rand = (a: number, b: number) => a + Math.random() * (b - a)
-  const picks = [...POOL].sort(() => Math.random() - 0.5).slice(0, 5)
-  const placed: Placed[] = []
+  // The triangle is always pinned to the very top edge, at a random spot along it.
+  const triangle = POOL.find((d) => d.id === "triangle")!
+  const placed: Placed[] = [{ ...triangle, x: rand(120, W - 320), y: rand(18, 40), rot: rand(-8, 8), scale: rand(0.95, 1.15) }]
+  const picks = POOL.filter((d) => d.id !== "triangle")
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 4)
   for (const d of picks) {
     let x = 0
     let y = 0
     for (let tries = 0; tries < 60; tries++) {
       x = rand(40, W - 220)
-      y = rand(50, H - 180)
+      y = rand(120, H - 180)
       const dx = (x + 80 - W / 2) / 360
       const dy = (y + 60 - H / 2) / 280
       const outsideCentre = dx * dx + dy * dy > 1
