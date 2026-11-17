@@ -3,6 +3,7 @@
 import * as React from "react"
 import { BrainCircuitIcon, PaperclipIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -13,11 +14,32 @@ import { BoardDoodles } from "./board-doodles"
 import { LevelSlider } from "./level-slider"
 import { PromptBox } from "./prompt-box"
 
+// Each card gets its own pastel (light and dark variants written out in full so Tailwind sees them).
 const EXAMPLES = [
-  { text: "Why is the sky blue?", icon: SunIcon },
-  { text: "How does a neural network learn?", icon: BrainCircuitIcon },
-  { text: "Explain the Pythagorean theorem", icon: RulerIcon },
-  { text: "How do vaccines train the immune system?", icon: SyringeIcon },
+  {
+    text: "Why is the sky blue?",
+    icon: SunIcon,
+    card: "bg-sky-100 hover:bg-sky-200/80 dark:bg-sky-400/15 dark:hover:bg-sky-400/25",
+    iconColor: "text-sky-600 dark:text-sky-300",
+  },
+  {
+    text: "How does a neural network learn?",
+    icon: BrainCircuitIcon,
+    card: "bg-violet-100 hover:bg-violet-200/80 dark:bg-violet-400/15 dark:hover:bg-violet-400/25",
+    iconColor: "text-violet-600 dark:text-violet-300",
+  },
+  {
+    text: "Explain the Pythagorean theorem",
+    icon: RulerIcon,
+    card: "bg-amber-100 hover:bg-amber-200/80 dark:bg-amber-400/15 dark:hover:bg-amber-400/25",
+    iconColor: "text-amber-600 dark:text-amber-300",
+  },
+  {
+    text: "How do vaccines train the immune system?",
+    icon: SyringeIcon,
+    card: "bg-emerald-100 hover:bg-emerald-200/80 dark:bg-emerald-400/15 dark:hover:bg-emerald-400/25",
+    iconColor: "text-emerald-600 dark:text-emerald-300",
+  },
 ]
 
 const noopSubscribe = () => () => {}
@@ -126,15 +148,14 @@ export function EmptyState({ level, setLevel, onStart }: Props) {
         <div className="flex flex-col gap-3">
           <p className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Get started with an example</p>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {EXAMPLES.map(({ text, icon: Icon }) => (
+            {EXAMPLES.map(({ text, icon: Icon, card, iconColor }) => (
               <button
                 key={text}
                 type="button"
                 onClick={() => onStart(text)}
-                className="group flex min-h-28 flex-col justify-between gap-4 rounded-2xl bg-muted/60 p-4 text-left text-sm leading-snug text-foreground/90 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none dark:bg-muted/40 dark:hover:bg-muted/70"
-              >
+                className={cn("group flex min-h-28 flex-col justify-between gap-4 rounded-2xl p-4 text-left text-sm leading-snug text-foreground/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none", card)}>
                 <span>{text}</span>
-                <Icon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+                <Icon className={cn("size-[18px]", iconColor)} />
               </button>
             ))}
           </div>
