@@ -36,7 +36,7 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 | Point at the confusing bit | Click any drawing to pre-fill "Can you explain *X* in more detail?" |
 | Think with your hands | Pen and highlighter tools to annotate any board (per board, per clip) |
 | Learn from your own notes | The paperclip on the home screen attaches up to 3 files (text/markdown/CSV/JSON, PDF, or images; 3 MB total). The model teaches from them; text is inlined, PDFs and images are sent as multimodal input. You can also paste files or screenshots (Ctrl/Cmd+V) into either prompt box and attach to follow-up questions. Attachments are used only in live mode |
-| Come back later | A sidebar keeps your lesson history (search, reopen, delete) in this browser's localStorage, so past lessons replay without calling the AI again |
+| Come back later | Every lesson has its own URL (`/lesson/<id>`), so a reload or the back button returns to it. A sidebar keeps your lesson history (search, reopen, delete) in this browser's localStorage, so past lessons replay without calling the AI again |
 
 ## How to explore it (reviewer guide)
 

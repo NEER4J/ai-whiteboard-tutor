@@ -24,6 +24,23 @@ const newId = (p: string) => `${p}-${Date.now().toString(36)}-${idSeq++}`
 
 const noopSubscribe = () => () => {}
 
+const sessionTitle = (topic: string) => {
+  const t = topic.replace(/\s+/g, " ").trim().replace(/[?.!]+$/, "")
+  return t.length > 56 ? `${t.slice(0, 55)}…` : t.charAt(0).toUpperCase() + t.slice(1)
+}
+
+/** Each saved lesson lives at /lesson/<id>, so a reload (or a shared tab) reopens it. */
+const lessonPath = (id: string) => `/lesson/${encodeURIComponent(id)}`
+const lessonIdFromPath = (path: string) => {
+  const m = /^\/lesson\/([^/]+)\/?$/.exec(path)
+  return m ? decodeURIComponent(m[1]) : null
+}
+const setUrl = (path: string, mode: "push" | "replace" = "push") => {
+  if (window.location.pathname === path) return
+  if (mode === "push") window.history.pushState(null, "", path)
+  else window.history.replaceState(null, "", path)
+}
+
 function usePlayer() {
   // One Player per mounted app; created lazily on the client only.
   const [player] = React.useState(() => (typeof window === "undefined" ? null : new Player()))
@@ -111,7 +128,16 @@ export function TutorApp() {
       const apply = (u: ClipUpdate) => {
         setClips((m) => ({
           ...m,
-          [clipId]: { ...m[clipId], title: u.title, reply: u.reply, segments: u.segments, done: u.done, mode: u.mode },
+          [clipId]: {
+            ...m[clipId],
+            // Sample mode always returns the same pre-written lesson, so name the
+            // session after what the learner asked for instead.
+            title: u.mode === "sample" && kind === "lesson" ? sessionTitle(req.topic) : u.title,
+            reply: u.reply,
+            segments: u.segments,
+            done: u.done,
+            mode: u.mode,
+          },
         }))
         if (activeRef.current === clipId) player.setContent(u.segments, u.done)
         else if (!switched && (u.done ? u.segments.length > 0 : u.segments.length > 1)) {
@@ -161,7 +187,7 @@ export function TutorApp() {
 
   const stop = () => aborts.current.forEach((ac) => ac.abort())
 
-  const reset = React.useCallback(() => {
+  const resetState = React.useCallback(() => {
     aborts.current.forEach((ac) => ac.abort())
     player?.pause()
     setTopic(null)
@@ -174,11 +200,18 @@ export function TutorApp() {
     activeRef.current = null
   }, [player])
 
+  /** Back to the home screen (and "/"). */
+  const goHome = React.useCallback(() => {
+    resetState()
+    setUrl("/")
+  }, [resetState])
+
   const startLesson = (raw: string, attachments?: Attachment[]) => {
     const t = raw.trim()
     if (t.length < 2) return
-    reset()
+    resetState()
     const id = newId("lesson")
+    setUrl(lessonPath(id))
     setTopic(t)
     setLessonId(id)
     setItems([
@@ -193,11 +226,16 @@ export function TutorApp() {
     })
   }
 
-  const openSession = (id: string) => {
+  const openSession = (id: string, pushUrl = true) => {
     if (id === lessonId) return
     const saved = getSession(id)
-    if (!saved) return
-    reset()
+    if (!saved) {
+      toast.error("That lesson isn't saved in this browser.")
+      setUrl("/", "replace")
+      return
+    }
+    resetState()
+    if (pushUrl) setUrl(lessonPath(id))
     const restored: Record<string, ClipState> = {}
     for (const [cid, c] of Object.entries(saved.clips)) restored[cid] = { ...c, done: true }
     clipsRef.current = restored
@@ -208,6 +246,26 @@ export function TutorApp() {
     setLessonId(saved.lessonId)
     activate(saved.lessonId, restored[saved.lessonId], false)
   }
+
+  // Keep the page in step with the address bar: open the lesson in the URL on
+  // load, and follow the browser's back/forward buttons.
+  const navRef = React.useRef({ openSession, goHome })
+  React.useLayoutEffect(() => {
+    navRef.current = { openSession, goHome }
+  })
+  React.useEffect(() => {
+    if (!player) return
+    const sync = (fromPop: boolean) => {
+      const id = lessonIdFromPath(window.location.pathname)
+      if (id) navRef.current.openSession(id, false)
+      else if (fromPop) resetState()
+    }
+    sync(false)
+    const onPop = () => sync(true)
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player])
 
   const ask = (raw: string, attachments?: Attachment[]) => {
     const q = raw.trim() || (attachments?.length ? "Can you explain what I attached?" : "")
@@ -270,9 +328,13 @@ export function TutorApp() {
   const lessonTitle = lessonId ? clips[lessonId]?.title ?? topic : null
   const inLesson = !!topic && !!snap
 
+  React.useEffect(() => {
+    document.title = lessonTitle ? `${lessonTitle} — Chalk` : "Chalk — AI whiteboard tutor"
+  }, [lessonTitle])
+
   return (
     <SidebarProvider defaultOpen className="h-dvh min-h-0">
-      <AppSidebar activeId={lessonId} status={status} onNew={reset} onOpen={openSession} />
+      <AppSidebar activeId={lessonId} status={status} onNew={goHome} onOpen={(id) => openSession(id)} />
       <SidebarInset className="min-h-0 min-w-0 overflow-hidden border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
         <header className="flex h-12 shrink-0 items-center gap-2 px-3">
           <SidebarTrigger className="-ml-1 text-muted-foreground" />
@@ -287,7 +349,7 @@ export function TutorApp() {
             title={lessonTitle ?? "Lesson"}
             items={items}
             clips={clips}
-            onNew={reset}
+            onNew={goHome}
             onFullscreen={toggleFullscreen}
             fullscreen={fullscreen}
           />

@@ -150,10 +150,10 @@ export function BoardDoodles() {
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden [mask-image:radial-gradient(ellipse_70%_65%_at_50%_50%,transparent_35%,black_80%)]"
     >
-      <div className="absolute inset-0 text-foreground opacity-[0.07] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px] dark:opacity-[0.09]" />
+      <div className="absolute inset-0 text-foreground opacity-[0.07] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:24px_24px] dark:opacity-[0.05]" />
       {items && (
         <svg
-          className="absolute inset-0 size-full opacity-[0.22] dark:opacity-[0.28]"
+          className="absolute inset-0 size-full opacity-[0.22] dark:opacity-[0.11]"
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="xMidYMid slice"
           fill="none"
