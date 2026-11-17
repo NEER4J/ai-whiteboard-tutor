@@ -191,12 +191,17 @@ function makeRenderer(g: CanvasRenderingContext2D, tl: Timeline, segments: Segme
     const texts: { run: ReturnType<typeof shapeOf>["texts"][number]; p: number }[] = []
     for (const { el, progress } of items) {
       const { strokes, texts: runs } = shapeOf(el, lookup)
-      const outlines = strokes.filter((s) => !s.fill)
+      const washes = strokes.filter((s) => s.wash)
+      const outlines = strokes.filter((s) => !s.fill && !s.wash)
       const fills = strokes.filter((s) => s.fill)
       const textShare = runs.length ? (outlines.length ? 0.4 : 1) : 0
       const lineShare = 1 - textShare
       const lineP = lineShare ? Math.min(1, progress / lineShare) : 1
       const textP = textShare ? Math.max(0, (progress - lineShare) / textShare) : 1
+      for (const s of washes) {
+        const o = 0.2 * Math.max(0, (progress - 0.35) / 0.65)
+        if (o > 0) paths += `<path d="${s.d}" stroke="none" fill="${col(s.color)}" fill-opacity="${o}"/>`
+      }
       for (const s of fills) {
         const o = 0.35 * Math.max(0, (progress - 0.55) / 0.45)
         if (o > 0) paths += `<path d="${s.d}" fill="none" stroke="${col(s.color)}" stroke-width="${s.width}" stroke-linecap="round" opacity="${o}"/>`

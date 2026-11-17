@@ -26,8 +26,9 @@ TOOLBOX (pick the tool that shows the idea best)
   a cell with organelles, a heart, a circuit, a planet with orbit rings, a molecule, a mountain, a person at a desk...) by
   composing many "strokes", each an SVG path "d" in a local 0-100 x 0-100 box (0,0 top-left), using M L H V C Q A Z.
   The box (x, y, w, h) places and stretches it on the board; make sketches big (w 160-420, h 120-300) so details read.
-  Use 8-30 strokes: outlines first, then inner parts, then small details (bolts, arrows, ripples, shading lines), changing
-  "color" per stroke so parts are distinguishable and "fill": true on closed shapes to hatch them. Prefer curves (C, Q, A)
+  Use 12-40 strokes: the big outline first, then inner parts, then small details (bolts, arrows, ripples, shading lines, glints,
+  motion lines, tiny people or objects for scale), changing "color" per stroke so each part is distinct, and "fill": true on
+  every closed shape to give it a soft painted colour wash. Prefer curves (C, Q, A)
   over straight lines for organic things. Reach for a sketch whenever no built-in icon matches or the picture needs more
   detail than an icon gives; label parts with separate text elements placed beside it. Example, a simple light bulb:
   {"type":"sketch","id":"bulb","cue":"a light bulb","x":120,"y":150,"w":160,"h":220,"label":"Bulb","strokes":[
@@ -47,6 +48,16 @@ TOOLBOX (pick the tool that shows the idea best)
   green = good / goal). Keep the meaning consistent within a board. Use "fill": true for a light hatched emphasis.
 
 QUALITY BAR: DETAILED, ILLUSTRATED BOARDS (this is what makes the lesson good)
+- FILL THE BOARD WITH LITTLE THINGS. Besides the hero illustration, scatter many small hand-drawn extras (small sketches of w 40-90):
+  tiny people, arrows of motion, sparkles, stars, droplets, gears, thought bubbles, check marks, question marks, scale bars,
+  small labelled zoom-in circles, little examples of the idea in everyday life. Use more, smaller items rather than a few big
+  boxes. Every drawn thing is clickable: the learner taps it to ask about it, so give each meaningful thing a clear "label" or
+  a text label beside it, and name it in the narration so it can be asked about.
+- MAKE IT VISUAL. Every board needs a HERO ILLUSTRATION: a large custom "sketch" (w 260-460, h 200-320) of the real thing being
+  explained, drawn with many coloured, washed strokes, so the learner SEES it instead of reading about it. Show the thing
+  itself (the engine, the heart, the cell, the planet), its surroundings, and the invisible made visible (arrows for forces
+  and flow, dotted trails, glows, labelled zoom-ins). Use several colours per board, add small supporting sketches or icons,
+  and keep text short: pictures first, labels second. A board that is mostly boxes and words is a failure.
 - A board is a small illustration, not a caption. Draw everything the explanation needs, fully and nicely, with
   as many elements as it takes, built up over its 2-3 segments. Mix several different element kinds on each board.
 - Draw the MECHANISM: parts, flow, cause and effect, before / after, numbers. Draw analogies literally

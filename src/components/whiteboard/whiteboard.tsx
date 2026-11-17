@@ -115,7 +115,8 @@ const ElementView = React.memo(function ElementView({
   onClick: () => void
 }) {
   const { strokes, texts, bbox } = shape
-  const outlines = strokes.filter((s) => !s.fill)
+  const washes = strokes.filter((s) => s.wash)
+  const outlines = strokes.filter((s) => !s.fill && !s.wash)
   const fills = strokes.filter((s) => s.fill)
   // Budget: outlines draw first, then text writes, then fills fade in.
   const textShare = texts.length ? (outlines.length ? 0.4 : 1) : 0
@@ -143,6 +144,9 @@ const ElementView = React.memo(function ElementView({
           className="fill-transparent transition-colors group-hover/el:fill-[var(--wb-hover)] group-focus-visible/el:fill-[var(--wb-hover)]"
         />
       )}
+      {washes.map((s, i) => (
+        <path key={`w${i}`} d={s.d} stroke="none" style={{ fill: colorVar(s.color), fillOpacity: 0.2 * Math.max(0, (progress - 0.35) / 0.65) }} />
+      ))}
       {fills.map((s, i) => (
         <path
           key={`f${i}`}

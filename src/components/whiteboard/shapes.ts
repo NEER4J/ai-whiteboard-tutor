@@ -9,7 +9,7 @@ import { ICONS } from "./icons"
  * stroke-dashoffset, so an element's appearance is a function of 0..1 progress.
  */
 
-export type Stroke = { d: string; color: BoardColor; width: number; fill: boolean }
+export type Stroke = { d: string; color: BoardColor; width: number; fill: boolean; /** soft solid colour wash under a closed shape */ wash?: boolean }
 export type TextRun = {
   x: number
   y: number
@@ -363,7 +363,7 @@ function build(el: BoardElement, target: BoardElement | undefined, lookup: (id: 
       el.strokes.slice(0, 40).forEach((st, i) => {
         let drawable: Drawable
         try {
-          drawable = gen.path(st.d, opts(`${el.id}:${i}`, { roughness: 0.6, strokeWidth: 2.4, ...(st.fill ? { fill: "x", fillStyle: "hachure", hachureGap: 7 } : {}) }))
+          drawable = gen.path(st.d, opts(`${el.id}:${i}`, { roughness: 0.6, strokeWidth: 2.4 }))
         } catch {
           return // a malformed path is skipped rather than breaking the board
         }
@@ -375,7 +375,11 @@ function build(el: BoardElement, target: BoardElement | undefined, lookup: (id: 
             }
           }
         }
-        strokes.push(...toStrokes(drawable, st.color ?? el.color ?? "ink"))
+        const sc = st.color ?? el.color ?? "ink"
+        const own = toStrokes(drawable, sc)
+        // fill: true gives a soft colour wash (like a marker) under the outline, so drawings look painted, not just outlined
+        if (st.fill) for (const o of own) if (!o.fill) strokes.push({ d: o.d, color: sc, width: 0, fill: false, wash: true })
+        strokes.push(...own)
       })
       const w = clamp(el.w, 40, 480)
       const h = clamp(el.h, 40, 340)
