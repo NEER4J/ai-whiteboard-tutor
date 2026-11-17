@@ -116,7 +116,7 @@ function makeLayout(): Placed[] {
   const rand = (a: number, b: number) => a + Math.random() * (b - a)
   // The triangle is always pinned to the very top edge, at a random spot along it.
   const triangle = POOL.find((d) => d.id === "triangle")!
-  const placed: Placed[] = [{ ...triangle, x: rand(120, W - 320), y: rand(18, 40), rot: rand(-8, 8), scale: rand(0.95, 1.15) }]
+  const placed: Placed[] = [{ ...triangle, x: rand(120, W - 320), y: rand(-14, 4), rot: rand(-6, 6), scale: rand(0.95, 1.15) }]
   const picks = POOL.filter((d) => d.id !== "triangle")
     .sort(() => Math.random() - 0.5)
     .slice(0, 4)
