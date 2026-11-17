@@ -493,7 +493,7 @@ export function TutorApp() {
         onOpen={(id) => openSession(id)}
       />
       <SidebarInset id="main" tabIndex={-1} className="min-h-0 min-w-0 overflow-hidden outline-none border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
-        <header className="flex h-12 shrink-0 items-center px-3">
+        <header className="@container/header flex h-12 shrink-0 items-center px-3">
           {/* Left cell: sidebar toggle + lesson title. On wide screens it is exactly as
               wide as the chat column, so the chapter switcher that follows starts where
               the whiteboard preview starts. */}
@@ -507,8 +507,8 @@ export function TutorApp() {
             <SidebarTrigger className="-ml-1 shrink-0 text-muted-foreground" />
             {showBoard && (
               <>
-                <Separator orientation="vertical" className="mx-1 hidden h-4 shrink-0 self-center md:block" />
-                <h1 className="hidden min-w-0 truncate text-sm font-medium md:block">{lessonTitle}</h1>
+                <Separator orientation="vertical" className="mx-1 hidden h-4 shrink-0 self-center @3xl/header:block" />
+                <h1 className="hidden min-w-0 truncate text-sm font-medium @3xl/header:block">{lessonTitle}</h1>
               </>
             )}
           </div>

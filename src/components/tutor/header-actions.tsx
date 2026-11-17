@@ -99,13 +99,16 @@ export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscre
   return (
     <div className="ml-auto flex shrink-0 items-center gap-0.5">
       {/* Phones: one overflow menu instead of a row of icons */}
-      <div className="flex items-center md:hidden">
+      <div className="flex items-center @5xl/header:hidden">
         {inLesson ? (
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="More options" />}>
               <MoreHorizontalIcon />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={onFullscreen} className="hidden lg:flex">
+                <MaximizeIcon /> Full-screen whiteboard
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={copy}>
                 <CopyIcon /> Copy transcript
               </DropdownMenuItem>
@@ -155,7 +158,7 @@ export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscre
       </div>
 
       {/* Tablet and desktop */}
-      <div className="hidden items-center gap-0.5 md:flex">
+      <div className="hidden items-center gap-0.5 @5xl/header:flex">
         {inLesson && (
           <>
             <IconButton label={fullscreen ? "Exit full screen" : "Full-screen whiteboard"} onClick={onFullscreen}>
