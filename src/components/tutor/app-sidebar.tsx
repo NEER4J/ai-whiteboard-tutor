@@ -16,6 +16,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -36,7 +37,6 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
@@ -175,12 +175,14 @@ export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
                 </Badge>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-48">
-                <DropdownMenuLabel>Theme</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
-                  <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={(v) => setTheme(String(v))}>
+                    <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuGroup>
                 {sessions.length > 0 && (
                   <>
                     <DropdownMenuSeparator />
@@ -201,7 +203,6 @@ export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
         </SidebarMenu>
         <p className="px-1 text-[11px] leading-snug text-muted-foreground/80">Lessons are saved only in this browser.</p>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }

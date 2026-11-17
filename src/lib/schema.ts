@@ -143,10 +143,22 @@ export type Clip = z.infer<typeof clipSchema>
 
 export type Level = "beginner" | "intermediate" | "advanced"
 
+export const attachmentSchema = z.object({
+  name: z.string().max(160),
+  kind: z.enum(["text", "image", "pdf"]),
+  mediaType: z.string().max(100),
+  /** text content for "text"; base64 (no data-URL prefix) for "image" and "pdf" */
+  data: z.string().max(4_200_000),
+})
+
+export type AttachmentPayload = z.infer<typeof attachmentSchema>
+
 export const lessonRequestSchema = z.object({
   mode: z.enum(["lesson", "followup"]),
   topic: z.string().trim().min(2).max(300),
   level: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
+  /** material the learner wants the lesson to be based on (lesson mode only) */
+  attachments: z.array(attachmentSchema).max(3).optional(),
   /** follow-up only */
   question: z.string().trim().max(500).optional(),
   lesson: z

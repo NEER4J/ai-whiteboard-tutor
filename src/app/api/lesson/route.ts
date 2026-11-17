@@ -35,10 +35,28 @@ export async function POST(req: Request) {
   }
 
   const isLesson = body.mode === "lesson"
+  const userText = isLesson ? lessonUserPrompt(body) : followupUserPrompt(body)
+  const media = isLesson ? (body.attachments ?? []).filter((a) => a.kind !== "text") : []
   const result = streamText({
     model: LESSON_MODEL,
     system: isLesson ? lessonSystemPrompt(body.level) : followupSystemPrompt(body.level),
-    prompt: isLesson ? lessonUserPrompt(body) : followupUserPrompt(body),
+    ...(media.length
+      ? {
+          messages: [
+            {
+              role: "user" as const,
+              content: [
+                { type: "text" as const, text: userText },
+                ...media.map((a) =>
+                  a.kind === "image"
+                    ? { type: "image" as const, image: a.data, mediaType: a.mediaType }
+                    : { type: "file" as const, data: a.data, mediaType: "application/pdf" }
+                ),
+              ],
+            },
+          ],
+        }
+      : { prompt: userText }),
     output: Output.object({ schema: clipSchema }),
     maxOutputTokens: 8000,
     abortSignal: req.signal,

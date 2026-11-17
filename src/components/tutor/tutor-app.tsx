@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import type { Attachment } from "@/lib/attachments"
 import { Player } from "@/lib/player"
 import type { BoardElement, LessonRequest, Level } from "@/lib/schema"
 import { getSession, saveSession } from "@/lib/sessions"
@@ -161,7 +162,7 @@ export function TutorApp() {
     activeRef.current = null
   }, [player])
 
-  const startLesson = (raw: string) => {
+  const startLesson = (raw: string, attachments?: Attachment[]) => {
     const t = raw.trim()
     if (t.length < 2) return
     reset()
@@ -172,7 +173,12 @@ export function TutorApp() {
       { id: newId("u"), role: "user", text: t },
       { id: newId("a"), role: "assistant", clipId: id },
     ])
-    run(id, { mode: "lesson", topic: t, level })
+    run(id, {
+      mode: "lesson",
+      topic: t,
+      level,
+      attachments: attachments?.map(({ name, kind, mediaType, data }) => ({ name, kind, mediaType, data })),
+    })
   }
 
   const openSession = (id: string) => {
@@ -265,11 +271,11 @@ export function TutorApp() {
         </header>
 
         {!inLesson ? (
-          <EmptyState level={level} setLevel={setLevel} captions={captions} setCaptions={setCaptions} onStart={startLesson} mode={status?.mode ?? null} />
+          <EmptyState level={level} setLevel={setLevel} onStart={startLesson} mode={status?.mode ?? null} />
         ) : (
           <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
             {/* Whiteboard preview */}
-            <div className="flex h-[calc((100vw-1.5rem)*0.6+14rem)] max-h-[70dvh] shrink-0 flex-col rounded-2xl bg-muted/60 p-3 sm:h-[60dvh] lg:order-2 lg:m-3 lg:mt-0 lg:h-auto lg:min-w-0 lg:flex-1 lg:p-5 dark:bg-muted/30 max-lg:mx-3">
+            <div className="mx-3 mb-3 flex min-h-0 flex-[3] flex-col rounded-2xl bg-muted/60 p-3 lg:order-2 lg:m-3 lg:mt-0 lg:min-w-0 lg:flex-1 lg:p-5 dark:bg-muted/30">
               <BoardStage
                 player={player}
                 snap={snap}
@@ -284,7 +290,7 @@ export function TutorApp() {
               />
             </div>
             {/* Chat */}
-            <aside className="flex min-h-0 flex-1 flex-col lg:order-1 lg:w-[380px] lg:flex-none xl:w-[420px]">
+            <aside className="flex min-h-0 flex-[2] flex-col lg:order-1 lg:w-[380px] lg:flex-none xl:w-[420px]">
               <ChatPanel
                 items={items}
                 clips={clips}
