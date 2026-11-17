@@ -91,7 +91,7 @@ export function EmptyState({ level, setLevel, onStart }: Props) {
       <BoardDoodles />
       <div className="relative my-auto flex w-full max-w-3xl flex-col gap-9 py-8">
         <div className="flex flex-col items-start gap-3 text-left">
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="text-4xl font-medium tracking-tight sm:text-5xl">
             {hello} <span aria-hidden>👋</span>
           </h1>
           <p className="max-w-lg text-base text-pretty text-muted-foreground">
