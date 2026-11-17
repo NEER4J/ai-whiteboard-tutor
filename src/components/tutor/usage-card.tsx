@@ -6,59 +6,63 @@ import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import type { AppStatus } from "./app-sidebar"
 
-/** Sidebar card: free lessons left, or "using your own key", plus the way to add one. */
+/**
+ * Sidebar card: how much free use is left (or that the visitor's own key is in use),
+ * the way to add a key, and a one-line status footnote.
+ */
 export function UsageCard({ status, userKey, onManageKey }: { status: AppStatus; userKey: string | null; onManageKey: () => void }) {
   const quota = status?.quota
   const left = quota ? Math.max(0, quota.prompts.limit - quota.prompts.used) : null
-  const out = left === 0
-  const dot = userKey || status?.mode === "live" ? "bg-emerald-500" : "bg-amber-500"
+  const out = left === 0 && !userKey
+  const live = !!userKey || status?.mode === "live"
+  const model = status?.model?.split("/")[1]
 
   return (
-    <div className="rounded-xl bg-sidebar-accent/60 px-3 py-2.5">
-      <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-        <span className={cn("size-1.5 rounded-full", out && !userKey ? "bg-destructive" : dot)} />
-        {userKey
-          ? "Using your own key"
-          : !status
-            ? "Checking…"
-            : status.mode === "sample"
-              ? "Sample mode"
-              : `Live AI · ${status.model?.split("/")[1] ?? ""}`}
+    <div className="flex flex-col gap-2.5 rounded-xl bg-sidebar-accent/60 p-3">
+      {/* headline */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium">{userKey ? "Your own key" : status?.mode === "sample" ? "Sample mode" : "Free prompts"}</span>
+        {userKey ? (
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+            No limit
+          </span>
+        ) : quota && left !== null ? (
+          <span className={cn("text-xs tabular-nums", out ? "font-medium text-destructive" : "text-muted-foreground")}>
+            <span className={cn("font-semibold", out ? "" : "text-foreground")}>{left}</span> / {quota.prompts.limit} left
+          </span>
+        ) : null}
       </div>
 
-      {userKey ? (
-        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">No free-tier limit. Billed to your AI Gateway account.</p>
-      ) : quota && left !== null ? (
-        <div className="mt-2 flex flex-col gap-1.5">
-          <div className="flex items-baseline justify-between text-[11px] text-muted-foreground">
-            <span>{out ? "No free prompts left" : "Free prompts"}</span>
-            <span className={cn("tabular-nums", out ? "font-medium text-destructive" : "text-foreground")}>
-              {left} of {quota.prompts.limit} left
-            </span>
-          </div>
-          <Progress
-            value={(left / quota.prompts.limit) * 100}
-            className="gap-0 [&_[data-slot=progress-track]]:h-1 [&_[data-slot=progress-indicator]]:bg-foreground/70"
-          />
-        </div>
-      ) : (
-        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-          {status?.mode === "sample" ? "No AI key is set, so lessons are pre-written. " : ""}
-          Your lessons are saved only in this browser.
-        </p>
+      {quota && left !== null && !userKey && (
+        <Progress
+          value={(left / quota.prompts.limit) * 100}
+          className="gap-0 [&_[data-slot=progress-track]]:h-1 [&_[data-slot=progress-indicator]]:bg-foreground/70"
+        />
       )}
 
       {(userKey || status) && (
         <Button
-          variant={out && !userKey ? "default" : "secondary"}
+          variant={out ? "default" : "secondary"}
           size="sm"
-          className="mt-2.5 h-7 w-full rounded-lg text-xs"
+          className="h-8 w-full rounded-lg bg-background text-xs data-[variant=default]:bg-primary"
           onClick={onManageKey}
         >
-          <KeyRoundIcon data-icon="inline-start" /> {userKey ? "Manage your key" : "Use your own key"}
+          <KeyRoundIcon data-icon="inline-start" /> {userKey ? "Manage your key" : out ? "Add your key to continue" : "Use your own key"}
         </Button>
       )}
-      <p className="mt-2 text-[11px] leading-snug text-muted-foreground/80">Lessons are saved only in this browser.</p>
+
+      {/* footnote */}
+      <p className="flex items-start gap-1.5 text-[11px] leading-snug text-muted-foreground">
+        <span className={cn("mt-1 size-1.5 shrink-0 rounded-full", out ? "bg-destructive" : live ? "bg-emerald-500" : "bg-amber-500")} />
+        <span>
+          {!status
+            ? "Checking…"
+            : status.mode === "sample" && !userKey
+              ? "No AI key set: lessons are pre-written."
+              : `Live AI${model ? ` · ${model}` : ""}`}
+          {" · "}Lessons stay in this browser.
+        </span>
+      </p>
     </div>
   )
 }

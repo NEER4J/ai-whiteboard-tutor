@@ -169,3 +169,15 @@
   background-image: radial-gradient(var(--wb-dot) 1.2px, transparent 1.2px);
   background-size: 22px 22px;
 }
+
+/* Respect "reduce motion": no entrance animations, pulses or smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

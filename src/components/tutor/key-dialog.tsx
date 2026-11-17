@@ -20,7 +20,7 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Why it opened: shows a different intro when the free allowance ran out. */
-  reason?: "quota" | "manual"
+  reason?: "quota" | "manual" | "ip" | "capacity"
   freeLimit?: number
   onSaved?: () => void
 }
@@ -76,12 +76,24 @@ export function KeyDialog({ open, onOpenChange, reason = "manual", freeLimit = 1
           <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-violet-100 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">
             <KeyRoundIcon className="size-5" />
           </div>
-          <DialogTitle>{saved ? "Your API key" : reason === "quota" ? "You've used your free prompts" : "Use your own API key"}</DialogTitle>
+          <DialogTitle>{saved
+              ? "Your API key"
+              : reason === "quota"
+                ? "You've used your free prompts"
+                : reason === "ip"
+                  ? "Free prompts for your network are used up today"
+                  : reason === "capacity"
+                    ? "The free demo is at capacity today"
+                    : "Use your own API key"}</DialogTitle>
           <DialogDescription>
             {saved
               ? "Lessons, answers and voice are now billed to your own Vercel AI Gateway account, with no free-tier limit."
               : reason === "quota"
                 ? `Every visitor gets ${freeLimit} free prompts, counting lessons, follow-up questions, quiz answers and hints. To keep learning, add your own Vercel AI Gateway key. It takes a minute.`
+                : reason === "ip"
+                  ? "Free prompts are also capped per network each day, so the demo stays available for everyone. Add your own Vercel AI Gateway key to keep going now, or come back tomorrow."
+                  : reason === "capacity"
+                    ? "Chalk's shared key has reached its daily budget. Add your own Vercel AI Gateway key to keep going now, or come back tomorrow."
                 : `Chalk gives every visitor ${freeLimit} free prompts (lessons, follow-ups, quiz answers and hints all count). Add your own Vercel AI Gateway key to remove the limit.`}
           </DialogDescription>
         </DialogHeader>

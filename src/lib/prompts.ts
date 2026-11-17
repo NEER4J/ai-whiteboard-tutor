@@ -77,7 +77,7 @@ SYNC RULES
 NARRATION
 - Spoken, warm, conversational, like a great teacher at a whiteboard ("Let's draw...", "Notice how...").
 - Plain text only: no markdown, emojis, LaTeX, or symbols that sound odd when read aloud (write "x squared", not "x^2").
-- Each segment is 1-3 sentences (about 20-45 words).
+- Each segment is 2-3 sentences (about 28-45 words).
 `
 
 export function lessonSystemPrompt(level: LessonRequest["level"]) {
@@ -93,9 +93,10 @@ FIRST DECIDE: is the message something you can teach?
   2-3 example topics (e.g. "Why is the sky blue?"). Never invent a lesson for a message that is not a topic.
 - Otherwise teach it, following everything below.
 
-LESSON SHAPE (about 2 minutes spoken, 280-330 words of narration in total)
-- HARD REQUIREMENTS: at least 9 segments, exactly 3 or 4 boards, and at least 280 words of narration in total.
-  Count them before you finish; a lesson shorter than this is a failure. Do not stop after two boards.
+LESSON SHAPE (about 2 minutes spoken: 320-360 words of narration in total)
+- HARD REQUIREMENTS: at least 10 segments, exactly 3 or 4 boards, and at least 320 words of narration in total.
+  Each segment's narration is 2-3 full sentences of 28-45 words, never a single short sentence. Count the words before you finish;
+  a lesson under 320 words is a failure. Do not stop after two boards.
 - Set newBoard true on the first segment of each board (with a boardTitle and boardPlan): segment 1, about segment 4, about segment 7,
   and the recap board last. Boards 1-3 teach; the last board is a recap with a short worked example or checklist.
 - Arc: hook with a question or everyday observation -> core idea with a diagram -> how it works step by step ->

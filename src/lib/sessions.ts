@@ -61,6 +61,20 @@ export function getSession(id: string) {
   return read().find((s) => s.id === id)
 }
 
+const norm = (t: string) =>
+  t
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+
+/** A saved lesson on the same topic and level, so we can replay it instead of generating it again. */
+export function findSessionByTopic(topic: string, level: Level) {
+  const wanted = norm(topic)
+  if (wanted.length < 3) return undefined
+  return read().find((s) => s.level === level && norm(s.topic) === wanted && s.clips[s.lessonId]?.segments?.length)
+}
+
 export function deleteSession(id: string) {
   write(read().filter((s) => s.id !== id))
 }

@@ -9,7 +9,10 @@ jump between chapters, click anything on the board to ask about it, draw your ow
 notes on top, and ask follow-up questions that get answered **on the board**, not
 just in text.
 
-> Live demo: _add URL after deploying_ · Built with Next.js 16, shadcn/ui (Base UI) and the Vercel AI SDK + AI Gateway.
+> **Live demo: https://chalk.itsneeraj.com/** · [Documentation](https://chalk.itsneeraj.com/docs) · Built with Next.js 16, shadcn/ui (Base UI) and the Vercel AI SDK + AI Gateway.
+
+![Chalk home screen](docs/screenshots/home.jpg)
+![A lesson playing: chat on the left, the whiteboard being drawn on the right](docs/screenshots/lesson.jpg)
 
 ---
 
@@ -39,6 +42,27 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 | Think with your hands | Pen and highlighter tools to annotate any board (per board, per clip) |
 | Learn from your own notes | The paperclip on the home screen attaches up to 3 files (text/markdown/CSV/JSON, PDF, or images; 3 MB total). The model teaches from them; text is inlined, PDFs and images are sent as multimodal input. You can also paste files or screenshots (Ctrl/Cmd+V) into either prompt box and attach to follow-up questions. Attachments are used only in live mode |
 | Come back later | Every lesson has its own URL (`/lesson/<id>`), so a reload or the back button returns to it. A sidebar keeps your lesson history (search, reopen, delete) in this browser's localStorage, so past lessons replay without calling the AI again |
+
+## Access for reviewers
+
+- **Open https://chalk.itsneeraj.com/** in any modern browser. No sign-up and no setup.
+- The demo runs on live AI (Claude Haiku 5.5 for lessons, Gemini TTS for the voice). Each visitor gets **16 free prompts** in total
+  (a lesson, a follow-up, a quiz answer or a hint each count as one); the sidebar shows how many are left.
+- If you use them all, either come back later or **add your own Vercel AI Gateway key** (sidebar → *Use your own key*). It stays in your
+  browser and is never stored by the server.
+- If the live AI is ever unavailable, the app falls back to a clearly labelled **sample mode** with one pre-written lesson, so the
+  interface can still be explored.
+- Everything also runs locally in a few minutes: see [Running locally](#running-locally).
+
+| Evaluation dimension | Where to look |
+| --- | --- |
+| Product understanding and problem framing | [The learner and the problem](#the-learner-and-the-problem) |
+| Originality and product thinking | Voice-synced hand-drawn board, click-to-ask, quiz with inline answers, chapter timeline, attachments |
+| Engineering and problem-solving | [Key decisions](#key-decisions), streaming, cue-based sync, quota and caching design |
+| AI integration and application | [What is live and what is not](#what-is-live-and-what-is-not), structured output, guardrails, declines small talk |
+| Teaching and interaction quality | [How to explore it](#how-to-explore-it-reviewer-guide) |
+| Code quality and technical decisions | Typed schema, 44 unit tests (`npm test`), CI, lint and typecheck clean |
+| Documentation and communication | This README and the in-app [/docs](https://chalk.itsneeraj.com/docs) page |
 
 ## How to explore it (reviewer guide)
 
@@ -187,6 +211,9 @@ playback can be tried with no credentials.
 | `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
 | `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |
 | `FREE_PROMPTS` | no | `16` | Free prompts per visitor (lessons, follow-ups, quiz answers and hints all count) before they must add their own key |
+| `FREE_PER_IP_DAY` / `GLOBAL_DAILY_PROMPTS` | no | `32` / `400` | Per-IP and whole-demo daily caps on free prompts |
+| `TTS_PER_IP_DAY` / `GLOBAL_DAILY_TTS` | no | `320` / `4000` | Same for narration clips |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | recommended in production | from the Upstash integration | Shared counters (also accepted as `KV_REST_API_URL` / `KV_REST_API_TOKEN`) |
 | `USAGE_SECRET` | recommended in production | any long random string | Signs the usage cookie (falls back to the gateway key) |
 | `NEXT_PUBLIC_SITE_URL` | recommended once you have a domain | `https://chalk.example.com` | Public origin for canonical, social preview and sitemap URLs (on Vercel the production URL is used automatically) |
 | `MOCK_AI` | no | `1` | Force sample mode |
@@ -216,19 +243,29 @@ Narration is requested once per segment and cached for the tab, so replaying, se
 - **In-app documentation** lives at `/docs` (linked from the sidebar next to the GitHub link): usage, shortcuts, free limits and your own key, how it works, privacy and self-hosting.
 - **SEO:** page titles and descriptions, canonical URLs, Open Graph and Twitter cards, a generated 1200x630 preview image (`/og`), favicon, Apple touch icon, web manifest, `robots.txt`, `sitemap.xml` and JSON-LD structured data. Individual lesson pages (`/lesson/<id>`) are `noindex` because they live in the visitor's browser.
 
-## Limits and bring-your-own-key
+## Limits, caching and bring-your-own-key
 
-The demo runs on one shared AI Gateway key, so spending is capped:
+The demo runs on one shared AI Gateway key, so spending is capped in layers:
 
-- **16 free prompts per visitor in total.** A new lesson, a follow-up question, a quiz answer and a hint request each cost one prompt.
-  Usage is kept in a signed, HttpOnly cookie, so it can't be edited, and the sidebar shows how many are left. Narration audio is only served for lessons the visitor actually started.
-- **Burst and daily limits per IP** (30 requests / 10 min, 48 / day) as a backstop.
-- **After the free allowance, visitors can add their own Vercel AI Gateway key** (sidebar → "Use your own key"). The key is verified
-  with a one-word request, kept only in the visitor's browser (localStorage), and sent in an `x-chalk-key` header so the server can call
-  the gateway on their account. It is never stored or logged, and it removes the limits (they pay for their own usage).
+| Layer | Limit | Survives incognito / cleared cookies? |
+| --- | --- | --- |
+| Per browser (signed HttpOnly cookie) | **16 free prompts**: a lesson, follow-up, quiz answer or hint each cost one | No (it is the friendly, visible limit) |
+| Per IP address (hashed, never stored raw) | 32 prompts per day, 320 voice clips per day | **Yes** |
+| Whole demo (circuit breaker) | 400 prompts per day, 4,000 voice clips per day | **Yes** |
+| Short burst limit | 30 requests / 10 min per IP | Yes |
 
-Honest limitation: a cookie can be deleted, and the per-IP counters are per server instance. That is enough to stop casual abuse of
-a demo; for a hard guarantee, move the counters into a shared store (Vercel KV / Upstash) keyed by IP or user.
+Past a limit, the app explains why and offers to **use your own Vercel AI Gateway key** (sidebar → *Use your own key*). The key is
+verified with a one-word request, kept only in the visitor's browser, and sent in an `x-chalk-key` header so the server can call the
+gateway on their account. It is never stored or logged, and it bypasses the free limits (they pay for their own usage).
+
+Counters for the per-IP and global layers live in **Upstash Redis / Vercel KV** when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
+(or `KV_REST_API_URL` + `KV_REST_API_TOKEN`) are set, so every serverless instance sees the same numbers. Without it they fall back to
+in-memory counters, which is fine locally but only a partial safeguard on serverless. For a hard guarantee also set a spend budget on the
+AI Gateway key itself.
+
+**Nothing is generated twice.** Lessons and chat are saved in the browser's localStorage. Narration audio is saved in IndexedDB, keyed by
+voice model + exact text, so replaying, reloading or reopening a lesson makes no AI calls at all. Asking for a topic you already have
+(same level) reopens the saved lesson instead of generating it again, and costs no prompt.
 
 ## Limitations and what I'd do next
 
@@ -247,6 +284,20 @@ a demo; for a hard guarantee, move the counters into a shared store (Vercel KV /
 - **Quota is cookie + per-instance memory.** See "Limits and bring-your-own-key"; production would use a shared store (Redis/KV) and bot protection.
 - **No math typesetting** on the board; formulas are handwritten text.
 - **English only** for now; the schema and voices support other languages.
+
+## Tests
+
+```bash
+npm test          # 44 unit tests: cue-to-time sync, topic check, quota signing, counters, schema
+npm run typecheck && npm run lint
+```
+
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, tests and a production build on every push.
+
+## How this was built
+
+I used an AI coding assistant (Claude Code) as a pair-programmer for scaffolding and iteration, and directed the product, design,
+architecture and trade-offs myself; the decisions above are the ones I can explain and defend.
 
 ## License
 

@@ -11,6 +11,7 @@
  *    but durations are estimated and corrected with word-boundary events.
  */
 
+import { audioKey, getCachedAudio, putCachedAudio } from "./audio-cache"
 import { keyHeaders } from "./byok"
 import { estimateDuration } from "./timeline"
 
@@ -30,6 +31,12 @@ export interface VoiceEngine {
 }
 
 type Prepared = { url: string; duration: number }
+
+/** The speech model the server reports; part of the cache key so a model change never replays old audio. */
+let voiceModelId = "default"
+export const setVoiceModelId = (id: string | null | undefined) => {
+  voiceModelId = id || "default"
+}
 
 export class AiVoice implements VoiceEngine {
   readonly kind = "ai" as const
@@ -60,14 +67,22 @@ export class AiVoice implements VoiceEngine {
     let p = this.cache.get(text)
     if (!p) {
       p = (async () => {
-        const res = await fetch("/api/tts", {
-          method: "POST",
-          headers: { "content-type": "application/json", ...keyHeaders() },
-          body: JSON.stringify({ text }),
-        })
-        if (res.status === 503 || res.status === 402) throw new VoiceUnavailableError("AI voice unavailable")
-        if (!res.ok) throw new Error(`TTS failed (${res.status})`)
-        const url = URL.createObjectURL(await res.blob())
+        // 1. Already generated before (this tab, an earlier visit, or a saved lesson)? Reuse it: no API call.
+        const key = await audioKey(voiceModelId, text).catch(() => null)
+        let blob = key ? await getCachedAudio(key).catch(() => null) : null
+        // 2. Otherwise generate it once and keep it.
+        if (!blob) {
+          const res = await fetch("/api/tts", {
+            method: "POST",
+            headers: { "content-type": "application/json", ...keyHeaders() },
+            body: JSON.stringify({ text }),
+          })
+          if (res.status === 503 || res.status === 402) throw new VoiceUnavailableError("AI voice unavailable")
+          if (!res.ok) throw new Error(`TTS failed (${res.status})`)
+          blob = await res.blob()
+          if (key) void putCachedAudio(key, blob)
+        }
+        const url = URL.createObjectURL(blob)
         const duration = await measure(url)
         this.durations.set(text, duration)
         return { url, duration }

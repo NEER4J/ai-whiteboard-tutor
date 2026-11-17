@@ -7,8 +7,9 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import type { Attachment } from "@/lib/attachments"
 import { Player } from "@/lib/player"
 import type { BoardElement, LessonRequest, Level } from "@/lib/schema"
-import { getSession, saveSession } from "@/lib/sessions"
+import { findSessionByTopic, getSession, saveSession } from "@/lib/sessions"
 import { useUserKey } from "@/lib/byok"
+import { setVoiceModelId } from "@/lib/voice"
 import { QuotaError, streamClip, type ClipUpdate } from "@/lib/stream-clip"
 import { describe, type InkStroke } from "@/components/whiteboard/whiteboard"
 import { AppSidebar, type AppStatus } from "./app-sidebar"
@@ -93,13 +94,16 @@ export function TutorApp() {
   const aborts = React.useRef(new Map<string, AbortController>())
 
   const userKey = useUserKey()
-  const [keyDialog, setKeyDialog] = React.useState<{ open: boolean; reason: "quota" | "manual" }>({ open: false, reason: "manual" })
+  const [keyDialog, setKeyDialog] = React.useState<{ open: boolean; reason: "quota" | "manual" | "ip" | "capacity" }>({ open: false, reason: "manual" })
 
   /** Mode and free-allowance counts from the server (the cookie travels with the request). */
   const refreshStatus = React.useCallback(() => {
     fetch("/api/status")
       .then((r) => r.json())
-      .then(setStatus)
+      .then((st) => {
+        setStatus(st)
+        setVoiceModelId(st?.voice)
+      })
       .catch(() => setStatus(null))
   }, [])
   React.useEffect(() => {
@@ -183,7 +187,7 @@ export function TutorApp() {
         const message = err instanceof Error ? err.message : "Something went wrong."
         if (err instanceof QuotaError) {
           // Free allowance used up: offer to add their own key.
-          setKeyDialog({ open: true, reason: "quota" })
+          setKeyDialog({ open: true, reason: err.kind })
           refreshStatus()
           if (kind === "lesson") {
             setNotice(message)
@@ -250,6 +254,15 @@ export function TutorApp() {
   const startLesson = (raw: string, attachments?: Attachment[]) => {
     const t = raw.trim()
     if (t.length < 2) return
+    // Already have this lesson? Replay it instead of asking the AI (and spending a prompt) again.
+    if (!attachments?.length) {
+      const existing = findSessionByTopic(t, level)
+      if (existing) {
+        toast("You already have this lesson, so I reopened it instead of generating it again.")
+        openSession(existing.id)
+        return
+      }
+    }
     resetState()
     const id = newId("lesson")
     setUrl(lessonPath(id))
@@ -375,6 +388,12 @@ export function TutorApp() {
 
   return (
     <SidebarProvider defaultOpen className="h-dvh min-h-0 [--board-panel:#f4f4f5] dark:[--board-panel:var(--color-zinc-800)]">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
       <AppSidebar
         activeId={lessonId}
         status={status}
@@ -383,7 +402,7 @@ export function TutorApp() {
         onNew={goHome}
         onOpen={(id) => openSession(id)}
       />
-      <SidebarInset className="min-h-0 min-w-0 overflow-hidden border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
+      <SidebarInset id="main" tabIndex={-1} className="min-h-0 min-w-0 overflow-hidden outline-none border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
         <header className="flex h-12 shrink-0 items-center px-3">
           {/* Left cell: sidebar toggle + lesson title. On wide screens it is exactly as
               wide as the chat column, so the chapter switcher that follows starts where
@@ -398,7 +417,7 @@ export function TutorApp() {
             <SidebarTrigger className="-ml-1 shrink-0 text-muted-foreground" />
             {inLesson && (
               <>
-                <Separator orientation="vertical" className="mx-1 hidden h-4 shrink-0 md:block" />
+                <Separator orientation="vertical" className="mx-1 hidden h-4 shrink-0 self-center md:block" />
                 <h1 className="hidden min-w-0 truncate text-sm font-medium md:block">{lessonTitle}</h1>
               </>
             )}

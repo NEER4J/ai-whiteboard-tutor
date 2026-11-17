@@ -52,7 +52,7 @@ export function Whiteboard({ items, tool, ink, onInk, onElementClick, className,
       viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
       className={cn("block size-full touch-none select-none", drawing && "cursor-crosshair", className)}
       role="img"
-      aria-label="Whiteboard"
+      aria-label={boardSummary(items)}
       onPointerDown={(e) => {
         if (!drawing) return
         ;(e.target as Element).setPointerCapture?.(e.pointerId)
@@ -198,6 +198,49 @@ const ElementView = React.memo(function ElementView({
     </g>
   )
 })
+
+/** Screen-reader description of what is currently on the board. */
+export function boardSummary(items: VisibleElement[]): string {
+  const parts: string[] = []
+  for (const { el } of items) {
+    let t = ""
+    switch (el.type) {
+      case "text":
+        t = el.text.replace(/\n/g, " ")
+        break
+      case "note":
+        t = `note: ${el.text}`
+        break
+      case "icon":
+        t = `${el.name} icon${el.label ? ` labeled ${el.label}` : ""}`
+        break
+      case "rect":
+      case "circle":
+      case "ellipse":
+        t = el.label ? `shape labeled ${el.label}` : ""
+        break
+      case "arrow":
+      case "line":
+      case "curve":
+        t = el.label ? `${el.type === "line" ? "line" : "arrow"} labeled ${el.label}` : ""
+        break
+      case "brace":
+        t = el.label ? `bracket labeled ${el.label}` : ""
+        break
+      case "axes":
+        t = `graph${el.xLabel || el.yLabel ? ` of ${[el.yLabel, el.xLabel].filter(Boolean).join(" against ")}` : ""}`
+        break
+      case "bars":
+        t = `bar chart${el.labels?.length ? ` of ${el.labels.join(", ")}` : ""}`
+        break
+      default:
+        t = ""
+    }
+    if (t && !parts.includes(t)) parts.push(t)
+  }
+  const text = parts.join("; ")
+  return text ? `Whiteboard showing: ${text.slice(0, 600)}` : "Whiteboard, currently empty"
+}
 
 export function describe(el: BoardElement): string {
   switch (el.type) {

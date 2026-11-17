@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AudioWaveformIcon, BrainCircuitIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
+import { BrainCircuitIcon, RulerIcon, SunIcon, SyringeIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Kbd } from "@/components/ui/kbd"
 import type { Attachment } from "@/lib/attachments"
@@ -12,6 +12,7 @@ import { AttachButton, AttachmentChips } from "./attachment-chips"
 import { Credit } from "./credit"
 import { BoardDoodles } from "./board-doodles"
 import { LevelSlider } from "./level-slider"
+import { LogoMark } from "./logo"
 import { PromptBox } from "./prompt-box"
 
 // Each card gets its own pastel (light and dark variants written out in full so Tailwind sees them).
@@ -84,11 +85,18 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
       <BoardDoodles />
       <div className="relative my-auto flex w-full max-w-3xl flex-col gap-9 py-8">
         <div className="flex flex-col items-start gap-3 text-left">
-          <h1 className="text-4xl font-medium tracking-tight sm:text-5xl">
+          <p className="text-sm font-medium text-muted-foreground">
             {hello} <span aria-hidden>👋</span>
+          </p>
+          <h1 className="text-4xl leading-[1.15] font-medium tracking-tight sm:text-5xl sm:leading-[1.15]">
+            Learn{" "}
+            <span className="-mx-1 rounded-md bg-[linear-gradient(transparent_58%,#fde68a_58%,#fde68a_92%,transparent_92%)] px-1 dark:bg-[linear-gradient(transparent_58%,rgb(250_204_21/0.28)_58%,rgb(250_204_21/0.28)_92%,transparent_92%)]">
+              anything
+            </span>{" "}
+            in two minutes.
           </h1>
           <p className="max-w-lg text-base text-pretty text-muted-foreground">
-            Type any topic, or attach your notes, and get a two-minute lesson drawn on a whiteboard.
+            Type any topic or attach your notes. Chalk talks you through it out loud and draws it on a whiteboard as it goes.
           </p>
         </div>
 
@@ -121,9 +129,7 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
 
         {shownNotice && (
           <div className="-mt-4 flex animate-in gap-3 rounded-2xl bg-muted/60 p-3.5 duration-300 fade-in slide-in-from-top-1 dark:bg-muted/40" role="status">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <AudioWaveformIcon className="size-4" />
-            </span>
+            <LogoMark className="mt-0.5 h-5 w-6 shrink-0 text-foreground" />
             <div className="flex min-w-0 flex-col gap-2.5">
               <p className="text-sm leading-relaxed">{shownNotice}</p>
               <div className="flex flex-wrap gap-1.5">

@@ -91,6 +91,14 @@ export function ChatPanel(props: Props) {
                       onChapter={props.onChapter}
                       onRetry={props.onRetry}
                       // Only the newest quiz question still waiting for an answer gets the answer box.
+                      feedback={
+                        idx === items.length - 1
+                          ? {
+                              busy: props.busy,
+                              onUnclear: () => props.onSend("That wasn't clear. Please explain it again in a different way: simpler words, a new analogy, smaller steps."),
+                            }
+                          : undefined
+                      }
                       quizAnswer={
                         idx === items.length - 1
                           ? { busy: props.busy, onSubmit: (t) => props.onSend(t) }

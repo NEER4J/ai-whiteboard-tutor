@@ -13,7 +13,11 @@ export type ClipUpdate = {
 }
 
 /** The free allowance is used up: the learner needs to add their own key. */
-export class QuotaError extends Error {}
+export class QuotaError extends Error {
+  constructor(message: string, readonly kind: "quota" | "ip" | "capacity" = "quota") {
+    super(message)
+  }
+}
 
 const ERROR_MARK = "\u0000ERROR:"
 
@@ -35,7 +39,7 @@ export async function streamClip(
   })
   if (!res.ok || !res.body) {
     const err = await res.json().catch(() => null)
-    if (res.status === 402 || err?.code === "quota_exceeded") throw new QuotaError(err?.error ?? "Free allowance used.")
+    if (res.status === 402 || err?.code === "quota_exceeded") throw new QuotaError(err?.error ?? "Free allowance used.", err?.kind === "ip" || err?.kind === "capacity" ? err.kind : "quota")
     throw new Error(err?.error ?? `Request failed (${res.status})`)
   }
   const mode = res.headers.get("x-tutor-mode") === "sample" ? "sample" : "live"

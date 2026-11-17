@@ -5,11 +5,13 @@ import { useTheme } from "next-themes"
 import {
   BookOpenIcon,
   MessageSquareIcon,
+  KeyRoundIcon,
   MonitorIcon,
   MoonIcon,
   MoreHorizontalIcon,
   PlusIcon,
   SearchIcon,
+  SettingsIcon,
   SunIcon,
   Trash2Icon,
 } from "lucide-react"
@@ -39,7 +41,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Badge } from "@/components/ui/badge"
 import { GITHUB_URL } from "@/lib/site"
 import { clearSessions, deleteSession, groupByDay, useSessionList } from "@/lib/sessions"
 import { Credit } from "./credit"
@@ -165,14 +166,17 @@ export function AppSidebar({ activeId, status, userKey, onManageKey, onNew, onOp
         )}
       </SidebarContent>
 
-      <SidebarFooter className="gap-2 px-3 pb-3">
-        {/* Resources */}
-        <div className="grid grid-cols-2 gap-1.5">
+      <SidebarFooter className="gap-2.5 px-3 pb-3">
+        {/* 1. Usage and key: the one thing visitors need to watch */}
+        <UsageCard status={status} userKey={userKey} onManageKey={onManageKey} />
+
+        {/* 2. One compact row of buttons: docs, source, settings */}
+        <div className="flex items-center gap-1.5">
           <a
             href="/docs"
             target="_blank"
             rel="noopener"
-            className="flex h-8 items-center justify-center gap-1.5 rounded-lg bg-sidebar-accent/60 text-xs font-medium transition-colors hover:bg-sidebar-accent"
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-sidebar-accent/60 text-xs font-medium transition-colors hover:bg-sidebar-accent"
           >
             <BookOpenIcon className="size-3.5" /> Docs
           </a>
@@ -180,52 +184,60 @@ export function AppSidebar({ activeId, status, userKey, onManageKey, onNew, onOp
             href={GITHUB_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-8 items-center justify-center gap-1.5 rounded-lg bg-sidebar-accent/60 text-xs font-medium transition-colors hover:bg-sidebar-accent"
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-sidebar-accent/60 text-xs font-medium transition-colors hover:bg-sidebar-accent"
           >
             <GithubMark className="size-3.5" /> GitHub
           </a>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="Settings"
+                  title="Settings"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent/60 transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                />
+              }
+            >
+              <SettingsIcon className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="end" className="w-56">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={(v) => setTheme(String(v))}>
+                  <DropdownMenuRadioItem value="light">
+                    <SunIcon /> Light
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="dark">
+                    <MoonIcon /> Dark
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="system">
+                    <MonitorIcon /> System
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onManageKey}>
+                <KeyRoundIcon /> {userKey ? "Manage your API key" : "Use your own API key"}
+              </DropdownMenuItem>
+              {sessions.length > 0 && (
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => {
+                    clearSessions()
+                    onNew()
+                  }}
+                >
+                  <Trash2Icon /> Clear all lessons
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Settings first, then a compact info card */}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<SidebarMenuButton />}>
-                {theme === "dark" ? <MoonIcon /> : theme === "light" ? <SunIcon /> : <MonitorIcon />}
-                <span>Appearance</span>
-                <Badge variant="secondary" className="ml-auto font-normal capitalize">
-                  {theme ?? "system"}
-                </Badge>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-48">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>Theme</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={(v) => setTheme(String(v))}>
-                    <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuGroup>
-                {sessions.length > 0 && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => {
-                        clearSessions()
-                        onNew()
-                      }}
-                    >
-                      <Trash2Icon /> Clear all lessons
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <UsageCard status={status} userKey={userKey} onManageKey={onManageKey} />
-        <Credit className="-ml-1 self-start" />
+        {/* 3. Credit */}
+        <Credit className="self-center" />
       </SidebarFooter>
     </Sidebar>
   )

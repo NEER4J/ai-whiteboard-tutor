@@ -167,8 +167,9 @@ export default function DocsPage() {
             <li>With your own key there is no free-tier limit; usage is billed to your account. Remove the key any time.</li>
           </ul>
           <P>
-            Limits are enforced on the server with a signed cookie plus per-IP burst and daily caps. A cookie can be deleted, so this stops casual
-            abuse rather than determined abuse; a shared store would be the next step for a hard guarantee.
+            Limits are enforced on the server: a signed cookie for the visible 16-prompt allowance, plus a per-IP daily cap and a whole-demo daily
+            budget that clearing cookies or opening a private window does not reset. If the daily cap for your network or for the whole demo is hit,
+            Chalk says so and offers the same option: add your own key, or come back tomorrow.
           </P>
 
           <H2 id="how-it-works">How it works</H2>
@@ -204,7 +205,7 @@ export default function DocsPage() {
 
           <H2 id="privacy">Privacy</H2>
           <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
-            <li>No accounts and no database. Your lessons and chat history are saved only in this browser.</li>
+            <li>No accounts and no database. Your lessons and chat history are saved only in this browser, and narration audio is cached in your browser too, so replaying a lesson or reopening it never calls the AI again. Asking for a topic you already have reopens it for free.</li>
             <li>Your topics, questions and attached files are sent to the AI model to generate lessons, and are not stored by Chalk.</li>
             <li>If you add your own API key it stays in your browser (see above). The only cookie Chalk sets is a signed counter for the free allowance.</li>
           </ul>

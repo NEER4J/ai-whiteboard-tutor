@@ -11,6 +11,8 @@ import {
   LightbulbIcon,
   RefreshCwIcon,
   SendIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
@@ -23,6 +25,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 import type { PlayerSnapshot } from "@/lib/player"
 import { buildTimeline, formatTime } from "@/lib/timeline"
+import { LogoMark } from "./logo"
 import { MarkdownLite } from "./markdown-lite"
 import type { ClipState } from "./types"
 
@@ -65,9 +68,11 @@ type Props = {
   onRetry: (clipId: string) => void
   /** Present on quiz questions that are still waiting for the learner's answer. */
   quizAnswer?: { busy: boolean; onSubmit: (text: string) => void }
+  /** Present on the newest finished answer: lets the learner say it wasn't clear. */
+  feedback?: { busy: boolean; onUnclear: () => void }
 }
 
-export function AssistantMessage({ clip, userText, level, activeClipId, snap, onPlayClip, onChapter, onRetry, quizAnswer }: Props) {
+export function AssistantMessage({ clip, userText, level, activeClipId, snap, onPlayClip, onChapter, onRetry, quizAnswer, feedback }: Props) {
   if (!clip) return null
   const active = activeClipId === clip.id
   const generating = !clip.done && !clip.error
@@ -79,9 +84,7 @@ export function AssistantMessage({ clip, userText, level, activeClipId, snap, on
       <MessageContent className="gap-3">
         {/* who's talking */}
         <div className="flex items-center gap-2 px-0.5">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <AudioWaveformIcon className="size-3.5" />
-          </span>
+          <LogoMark className="h-5 w-6 shrink-0 text-foreground" />
           <span className="truncate text-sm font-medium">
             {isLesson ? (clip.title ?? "Creating your lesson…") : "Tutor"}
           </span>
@@ -113,6 +116,10 @@ export function AssistantMessage({ clip, userText, level, activeClipId, snap, on
         {isLesson && <LessonCard clip={clip} active={active} snap={snap} level={level} onChapter={onChapter} />}
 
         {!isLesson && clip.segments.length > 0 && <BoardAnswer clip={clip} active={active} snap={snap} onPlay={onPlayClip} />}
+
+        {feedback && clip.done && !clip.error && !intent?.quiz && (clip.segments.length > 0 || !!clip.reply) && (
+          <FeedbackRow busy={feedback.busy} onUnclear={feedback.onUnclear} />
+        )}
 
         {clip.error && (
           <div className="flex flex-col items-start gap-2">
@@ -342,6 +349,40 @@ function QuizAnswer({ busy, onSubmit }: { busy: boolean; onSubmit: (text: string
           <LightbulbIcon data-icon="inline-start" /> Give me a hint
         </Button>
       </div>
+    </div>
+  )
+}
+
+/** "Was this clear?" A thumbs-down asks the tutor to explain it again differently. */
+function FeedbackRow({ busy, onUnclear }: { busy: boolean; onUnclear: () => void }) {
+  const [vote, setVote] = React.useState<"up" | "down" | null>(null)
+  return (
+    <div className="flex items-center gap-1 px-0.5 text-xs text-muted-foreground" role="group" aria-label="Was this explanation clear?">
+      {vote === null ? (
+        <>
+          <span className="mr-1">Was this clear?</span>
+          <Button variant="ghost" size="icon-xs" className="rounded-full" aria-label="Yes, it was clear" onClick={() => setVote("up")}>
+            <ThumbsUpIcon />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className="rounded-full"
+            aria-label="No, explain it differently"
+            disabled={busy}
+            onClick={() => {
+              setVote("down")
+              onUnclear()
+            }}
+          >
+            <ThumbsDownIcon />
+          </Button>
+        </>
+      ) : vote === "up" ? (
+        <span>Glad it helped! Ask a follow-up or take a quiz.</span>
+      ) : (
+        <span>Thanks, let me try another way.</span>
+      )}
     </div>
   )
 }

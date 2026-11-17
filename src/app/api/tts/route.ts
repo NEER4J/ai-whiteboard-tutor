@@ -2,7 +2,8 @@ import { gateway, generateSpeech } from "ai"
 import { z } from "zod"
 import { TTS_MODEL, TTS_VOICE, clientIp, isLive } from "@/lib/server/config"
 import { userGateway } from "@/lib/server/gateway"
-import { isSecure, readUsage, ttsAllowance, usageCookie } from "@/lib/server/quota"
+import { GLOBAL_DAILY_TTS, TTS_PER_IP_DAY, isSecure, readUsage, ttsAllowance, usageCookie } from "@/lib/server/quota"
+import { DAY, hashIp, incr, today } from "@/lib/server/store"
 import { rateLimit } from "@/lib/server/rate-limit"
 
 export const maxDuration = 60
@@ -27,6 +28,9 @@ export async function POST(req: Request) {
     const usage = readUsage(req)
     if (usage.tts >= ttsAllowance(usage)) {
       return Response.json({ error: "Free voice allowance used.", code: "quota_exceeded" }, { status: 402 })
+    }
+    if ((await incr(`chalk:ttsip:${hashIp(clientIp(req))}:${today()}`, DAY)) > TTS_PER_IP_DAY || (await incr(`chalk:ttsglobal:${today()}`, DAY)) > GLOBAL_DAILY_TTS) {
+      return Response.json({ error: "Free voice allowance used for today.", code: "quota_exceeded" }, { status: 402 })
     }
     usage.tts += 1
     setCookie = usageCookie(usage, isSecure(req))

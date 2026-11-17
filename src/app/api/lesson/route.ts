@@ -8,7 +8,8 @@ import {
 } from "@/lib/prompts"
 import { LESSON_MODEL, LESSON_REASONING, clientIp, isLive } from "@/lib/server/config"
 import { userGateway } from "@/lib/server/gateway"
-import { FREE_PROMPTS, isSecure, promptsUsed, readUsage, usageCookie } from "@/lib/server/quota"
+import { FREE_PER_IP_DAY, FREE_PROMPTS, GLOBAL_DAILY_PROMPTS, isSecure, promptsUsed, readUsage, usageCookie } from "@/lib/server/quota"
+import { DAY, hashIp, incr, today } from "@/lib/server/store"
 import { rateLimit } from "@/lib/server/rate-limit"
 import { SAMPLE_FOLLOWUP, SAMPLE_LESSON } from "@/lib/server/sample"
 
@@ -50,6 +51,23 @@ export async function POST(req: Request) {
     if (promptsUsed(usage) >= FREE_PROMPTS) {
       return Response.json(
         { error: `You've used all ${FREE_PROMPTS} free prompts. Add your own AI Gateway key to keep learning.`, code: "quota_exceeded" },
+        { status: 402 }
+      )
+    }
+
+    // Beyond the cookie: a per-IP daily cap (clearing cookies or going incognito doesn't reset it)
+    // and a global daily budget so a spike can never run up an unbounded bill.
+    const ipCount = await incr(`chalk:ip:${hashIp(ip)}:${today()}`, DAY)
+    if (ipCount > FREE_PER_IP_DAY) {
+      return Response.json(
+        { error: "Free prompts for your network are used up for today. Add your own AI Gateway key to keep going, or come back tomorrow.", code: "quota_exceeded", kind: "ip" },
+        { status: 402 }
+      )
+    }
+    const globalCount = await incr(`chalk:global:${today()}`, DAY)
+    if (globalCount > GLOBAL_DAILY_PROMPTS) {
+      return Response.json(
+        { error: "The free demo has reached its daily capacity. Add your own AI Gateway key to keep going, or come back tomorrow.", code: "quota_exceeded", kind: "capacity" },
         { status: 402 }
       )
     }

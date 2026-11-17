@@ -13,6 +13,13 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 /** One shared budget: every request to the AI (a lesson, a follow-up, a quiz answer, a hint) costs one prompt. */
 export const FREE_PROMPTS = Number(process.env.FREE_PROMPTS) || 16
 
+/** Per-IP cap per day: catches visitors who open a new incognito window to reset their cookie. */
+export const FREE_PER_IP_DAY = Number(process.env.FREE_PER_IP_DAY) || 32
+/** Circuit breaker: total free prompts the whole demo will serve per day, whoever asks. */
+export const GLOBAL_DAILY_PROMPTS = Number(process.env.GLOBAL_DAILY_PROMPTS) || 400
+export const TTS_PER_IP_DAY = Number(process.env.TTS_PER_IP_DAY) || 320
+export const GLOBAL_DAILY_TTS = Number(process.env.GLOBAL_DAILY_TTS) || 4000
+
 export type Usage = { lessons: number; followups: number; tts: number }
 
 const COOKIE = "chalk_usage"
