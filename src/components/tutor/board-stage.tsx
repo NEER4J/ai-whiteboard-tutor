@@ -130,17 +130,12 @@ export function BoardStage({ player, snap, clip, isFollowup, onBackToLesson, onE
             )}
           </div>
 
-          {captions && clip && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-3 hidden sm:block">
-              <Captions snap={snap} segments={clip.segments} />
-            </div>
-          )}
         </div>
       </div>
 
-      {/* On phones the board is small, so captions sit below it instead of on top. */}
+      {/* Captions always sit below the canvas (never on top of the drawing), on every screen size. */}
       {captions && clip && (
-        <div className="flex h-[4.4rem] shrink-0 items-center overflow-hidden sm:hidden [&_p]:bg-transparent [&_p]:px-1 [&_p]:py-0 [&_p]:text-xs [&_p]:leading-snug">
+        <div className="flex h-[4.4rem] shrink-0 items-center overflow-hidden lg:h-[4.9rem] [&_p]:bg-transparent [&_p]:px-1 [&_p]:py-0 [&_p]:text-xs [&_p]:leading-snug sm:[&_p]:text-[13px] lg:[&_p]:text-sm">
           <Captions snap={snap} segments={clip.segments} />
         </div>
       )}

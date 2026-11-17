@@ -131,7 +131,7 @@ export function PromptBox({
               <InputGroupButton
                 size="icon-sm"
                 variant="secondary"
-                className="rounded-full"
+                className="size-9 rounded-xl"
                 aria-label="Stop"
                 onClick={onStop}
               >
@@ -142,7 +142,7 @@ export function PromptBox({
                 type="submit"
                 size="icon-sm"
                 variant="default"
-                className="rounded-full"
+                className="size-9 rounded-xl"
                 disabled={!canSend}
                 aria-label="Send"
               >
