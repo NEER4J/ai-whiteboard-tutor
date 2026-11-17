@@ -46,7 +46,7 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 ## Access for reviewers
 
 - **Open https://chalk.itsneeraj.com/** in any modern browser. No sign-up and no setup.
-- The demo runs on live AI (Claude Haiku 5.5 for lessons, Gemini TTS for the voice). Each visitor gets **10 free prompts per day**
+- The demo runs on live AI (DeepSeek V4.1 Flash for lessons, Gemini TTS for the voice). Each visitor gets **10 free prompts per day**
   (a lesson, a follow-up, a quiz answer or a hint each count as one). Limits reset at midnight UTC; the sidebar shows how many are left today.
 - If you use them all, either come back later or **add your own Vercel AI Gateway key** (sidebar → *Use your own key*). It stays in your
   browser and is never stored by the server.
@@ -82,7 +82,7 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 
 | Part | Status |
 | --- | --- |
-| Lesson generation (narration + diagrams) | **Live** — `anthropic/claude-haiku-5.5` with thinking off, via Vercel AI Gateway, streamed |
+| Lesson generation (narration + diagrams) | **Live** — `deepseek/deepseek-v4.1-flash-1017` (pinned to the `deepseek` gateway provider) with thinking off, via Vercel AI Gateway, streamed |
 | Follow-up answers, quizzes, grading | **Live** — same model, with lesson + position + chat history as context |
 | Narration voice | **Live** — `google/gemini-3.8-flash-lite-tts` via AI Gateway (one clip per segment) |
 | Voice fallback | Browser `speechSynthesis` (local, not AI) if AI speech fails, or if you choose it with the voice button |
@@ -206,7 +206,8 @@ playback can be tried with no credentials.
 | Name | Required | Example | Purpose |
 | --- | --- | --- | --- |
 | `AI_GATEWAY_API_KEY` | for live AI (not needed on Vercel with OIDC) | `vck_xxx` | Vercel AI Gateway key |
-| `LESSON_MODEL` | no | `anthropic/claude-haiku-5.5` | Text model for lessons and follow-ups (Haiku for speed; try `anthropic/claude-sonnet-5.5` for richer diagrams) |
+| `LESSON_MODEL` | no | `deepseek/deepseek-v4.1-flash-1017` | Text model for lessons and follow-ups (cheap and fast; try `anthropic/claude-sonnet-5.5` for richer diagrams) |
+| `LESSON_PROVIDER` | no | the model maker (`deepseek`) | Gateway provider to pin the model to; `any` lets the gateway choose |
 | `LESSON_REASONING` | no | `none` | Thinking effort: `none` (fastest), `minimal`, `low`, `medium`, `high` |
 | `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
 | `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |
@@ -234,7 +235,7 @@ A two-minute lesson is roughly 1,800 characters of narration. Approximate list p
 | Narration (default) | `google/gemini-3.8-flash-lite-tts` | about $0.017 |
 | Narration (alternative) | `fish-audio/drama-3` | about $0.018 |
 | Narration (previous default) | `openai/tts-1` | about $0.027 |
-| Lesson text | `anthropic/claude-haiku-5.5`, thinking off | well under $0.01 |
+| Lesson text | `deepseek/deepseek-v4.1-flash-1017`, thinking off | well under $0.01 |
 
 Narration is requested once per segment and cached for the tab, so replaying, seeking and restarting cost nothing extra; reopening a saved lesson later re-requests the audio.
 

@@ -6,7 +6,7 @@ import {
   lessonSystemPrompt,
   lessonUserPrompt,
 } from "@/lib/prompts"
-import { LESSON_MODEL, LESSON_REASONING, clientIp, isLive } from "@/lib/server/config"
+import { LESSON_MODEL, LESSON_PROVIDERS, LESSON_REASONING, clientIp, isLive } from "@/lib/server/config"
 import { userGateway } from "@/lib/server/gateway"
 import { FREE_PER_IP_DAY, FREE_PROMPTS, GLOBAL_DAILY_PROMPTS, isSecure, promptsUsed, readUsage, usageCookie } from "@/lib/server/quota"
 import { DAY, hashIp, incr, today } from "@/lib/server/store"
@@ -80,6 +80,7 @@ export async function POST(req: Request) {
   const result = streamText({
     model: gw ? gw(LESSON_MODEL) : LESSON_MODEL,
     reasoning: LESSON_REASONING,
+    ...(LESSON_PROVIDERS ? { providerOptions: { gateway: { only: LESSON_PROVIDERS } } } : {}),
     system: isLesson ? lessonSystemPrompt(body.level) : followupSystemPrompt(body.level),
     ...(media.length
       ? {
