@@ -11,6 +11,7 @@
  *    but durations are estimated and corrected with word-boundary events.
  */
 
+import { keyHeaders } from "./byok"
 import { estimateDuration } from "./timeline"
 
 export class VoiceUnavailableError extends Error {}
@@ -61,10 +62,10 @@ export class AiVoice implements VoiceEngine {
       p = (async () => {
         const res = await fetch("/api/tts", {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", ...keyHeaders() },
           body: JSON.stringify({ text }),
         })
-        if (res.status === 503) throw new VoiceUnavailableError("AI voice unavailable")
+        if (res.status === 503 || res.status === 402) throw new VoiceUnavailableError("AI voice unavailable")
         if (!res.ok) throw new Error(`TTS failed (${res.status})`)
         const url = URL.createObjectURL(await res.blob())
         const duration = await measure(url)

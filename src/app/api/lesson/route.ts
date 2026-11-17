@@ -7,6 +7,8 @@ import {
   lessonUserPrompt,
 } from "@/lib/prompts"
 import { LESSON_MODEL, LESSON_REASONING, clientIp, isLive } from "@/lib/server/config"
+import { userGateway } from "@/lib/server/gateway"
+import { FREE_FOLLOWUPS, FREE_LESSONS, isSecure, readUsage, usageCookie } from "@/lib/server/quota"
 import { rateLimit } from "@/lib/server/rate-limit"
 import { SAMPLE_FOLLOWUP, SAMPLE_LESSON } from "@/lib/server/sample"
 
@@ -22,23 +24,50 @@ export async function POST(req: Request) {
   }
   const body = parsed.data
 
-  const limit = rateLimit(`lesson:${clientIp(req)}`, 15, 10 * 60_000)
-  if (!limit.ok) {
-    return Response.json(
-      { error: `You've asked a lot in a short time. Please try again in ${limit.retryAfter}s.` },
-      { status: 429, headers: { "retry-after": String(limit.retryAfter) } }
-    )
-  }
-
-  if (!isLive()) {
-    return sampleStream(body.mode === "lesson" ? SAMPLE_LESSON : SAMPLE_FOLLOWUP)
-  }
-
+  const gw = userGateway(req) // the visitor's own key, if they added one
+  const live = gw ? true : isLive()
   const isLesson = body.mode === "lesson"
+
+  if (!live) {
+    return sampleStream(isLesson ? SAMPLE_LESSON : SAMPLE_FOLLOWUP)
+  }
+
+  // Free tier: the server's key is shared, so spending is capped per visitor.
+  // Visitors who bring their own key pay for themselves and skip these checks.
+  let setCookie: string | null = null
+  if (!gw) {
+    const ip = clientIp(req)
+    const burst = rateLimit(`lesson:${ip}`, 30, 10 * 60_000)
+    const day = rateLimit(`lesson-day:${ip}`, 48, 24 * 60 * 60_000)
+    if (!burst.ok || !day.ok) {
+      const wait = Math.max(burst.retryAfter, day.retryAfter)
+      return Response.json(
+        { error: `You've asked a lot in a short time. Please try again in ${Math.ceil(wait / 60)} min, or add your own API key to keep going.`, code: "rate_limited" },
+        { status: 429, headers: { "retry-after": String(wait) } }
+      )
+    }
+    const usage = readUsage(req)
+    const key = isLesson ? "lessons" : "followups"
+    const limit = isLesson ? FREE_LESSONS : FREE_FOLLOWUPS
+    if (usage[key] >= limit) {
+      return Response.json(
+        {
+          error: isLesson
+            ? `You've used your ${FREE_LESSONS} free lessons. Add your own AI Gateway key to keep learning.`
+            : `You've used your ${FREE_FOLLOWUPS} free follow-up questions. Add your own AI Gateway key to keep going.`,
+          code: "quota_exceeded",
+        },
+        { status: 402 }
+      )
+    }
+    usage[key] += 1
+    setCookie = usageCookie(usage, isSecure(req))
+  }
+
   const userText = isLesson ? lessonUserPrompt(body) : followupUserPrompt(body)
   const media = (body.attachments ?? []).filter((a) => a.kind !== "text")
   const result = streamText({
-    model: LESSON_MODEL,
+    model: gw ? gw(LESSON_MODEL) : LESSON_MODEL,
     reasoning: LESSON_REASONING,
     system: isLesson ? lessonSystemPrompt(body.level) : followupSystemPrompt(body.level),
     ...(media.length
@@ -75,7 +104,7 @@ export async function POST(req: Request) {
         }
       } catch (err) {
         console.error("[lesson] generation failed", err)
-        controller.enqueue(encoder.encode(`${ERROR_MARK}${friendlyError(err)}`))
+        controller.enqueue(encoder.encode(`${ERROR_MARK}${friendlyError(err, !!gw)}`))
       } finally {
         controller.close()
       }
@@ -88,14 +117,17 @@ export async function POST(req: Request) {
       "cache-control": "no-store",
       "x-tutor-mode": "live",
       "x-tutor-model": LESSON_MODEL,
+      ...(setCookie ? { "set-cookie": setCookie } : {}),
     },
   })
 }
 
-function friendlyError(err: unknown) {
+function friendlyError(err: unknown, ownKey: boolean) {
   const msg = err instanceof Error ? err.message : String(err)
   if (/api key|unauthori[sz]ed|401|403|authentication/i.test(msg))
-    return "The AI service rejected our credentials. Check AI_GATEWAY_API_KEY."
+    return ownKey
+      ? "The AI Gateway rejected your API key. Check it in Settings → Use your own key."
+      : "The AI service rejected our credentials. Check AI_GATEWAY_API_KEY."
   if (/rate|429|quota|credit/i.test(msg)) return "The AI service is busy or out of credits. Please try again shortly."
   return "The tutor couldn't finish this lesson. Please try again."
 }

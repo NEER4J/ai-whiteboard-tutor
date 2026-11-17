@@ -8,17 +8,18 @@ import type { Attachment } from "@/lib/attachments"
 import { Player } from "@/lib/player"
 import type { BoardElement, LessonRequest, Level } from "@/lib/schema"
 import { getSession, saveSession } from "@/lib/sessions"
-import { streamClip, type ClipUpdate } from "@/lib/stream-clip"
+import { useUserKey } from "@/lib/byok"
+import { QuotaError, streamClip, type ClipUpdate } from "@/lib/stream-clip"
 import { describe, type InkStroke } from "@/components/whiteboard/whiteboard"
-import { AppSidebar } from "./app-sidebar"
+import { AppSidebar, type AppStatus } from "./app-sidebar"
 import { BoardStage } from "./board-stage"
 import { ChapterPicker } from "./chapter-picker"
 import { ChatPanel } from "./chat-panel"
 import { EmptyState } from "./empty-state"
 import { HeaderActions } from "./header-actions"
+import { KeyDialog } from "./key-dialog"
 import type { ChatItem, ClipState } from "./types"
 
-type Status = { mode: "live" | "sample"; model: string | null; voice: string | null }
 
 let idSeq = 0
 const newId = (p: string) => `${p}-${Date.now().toString(36)}-${idSeq++}`
@@ -56,7 +57,7 @@ function usePlayer() {
 
 export function TutorApp() {
   const { player, snap } = usePlayer()
-  const [status, setStatus] = React.useState<Status | null>(null)
+  const [status, setStatus] = React.useState<AppStatus>(null)
   const [level, setLevel] = React.useState<Level>("beginner")
   const [captions, setCaptions] = React.useState(true)
   const [topic, setTopic] = React.useState<string | null>(null)
@@ -91,12 +92,19 @@ export function TutorApp() {
   const requests = React.useRef(new Map<string, LessonRequest>())
   const aborts = React.useRef(new Map<string, AbortController>())
 
-  React.useEffect(() => {
+  const userKey = useUserKey()
+  const [keyDialog, setKeyDialog] = React.useState<{ open: boolean; reason: "quota" | "manual" }>({ open: false, reason: "manual" })
+
+  /** Mode and free-allowance counts from the server (the cookie travels with the request). */
+  const refreshStatus = React.useCallback(() => {
     fetch("/api/status")
       .then((r) => r.json())
       .then(setStatus)
       .catch(() => setStatus(null))
   }, [])
+  React.useEffect(() => {
+    refreshStatus()
+  }, [refreshStatus])
 
   React.useEffect(() => {
     player?.setNoticeHandler((msg) => toast(msg))
@@ -151,6 +159,7 @@ export function TutorApp() {
 
       try {
         const result = await streamClip(req, apply, ac.signal)
+        refreshStatus()
         // The model decided this wasn't a topic (greeting, small talk): no lesson, just its reply.
         if (kind === "lesson" && result.segments.length === 0) {
           aborts.current.forEach((a) => a.abort())
@@ -172,12 +181,28 @@ export function TutorApp() {
           return
         }
         const message = err instanceof Error ? err.message : "Something went wrong."
+        if (err instanceof QuotaError) {
+          // Free allowance used up: offer to add their own key.
+          setKeyDialog({ open: true, reason: "quota" })
+          refreshStatus()
+          if (kind === "lesson") {
+            setNotice(message)
+            setTopic(null)
+            setItems([])
+            setClips({})
+            setLessonId(null)
+            setActiveId(null)
+            activeRef.current = null
+            setUrl("/", "replace")
+            return
+          }
+        }
         setClips((m) => ({ ...m, [clipId]: { ...m[clipId], error: message } }))
       } finally {
         aborts.current.delete(clipId)
       }
     },
-    [activate, player]
+    [activate, player, refreshStatus]
   )
 
   const busy = Object.values(clips).some((c) => !c.done && !c.error)
@@ -350,7 +375,14 @@ export function TutorApp() {
 
   return (
     <SidebarProvider defaultOpen className="h-dvh min-h-0 [--board-panel:#f4f4f5] dark:[--board-panel:var(--color-zinc-800)]">
-      <AppSidebar activeId={lessonId} status={status} onNew={goHome} onOpen={(id) => openSession(id)} />
+      <AppSidebar
+        activeId={lessonId}
+        status={status}
+        userKey={userKey}
+        onManageKey={() => setKeyDialog({ open: true, reason: "manual" })}
+        onNew={goHome}
+        onOpen={(id) => openSession(id)}
+      />
       <SidebarInset className="min-h-0 min-w-0 overflow-hidden border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
         <header className="flex h-12 shrink-0 items-center px-3">
           {/* Left cell: sidebar toggle + lesson title. On wide screens it is exactly as
@@ -429,6 +461,13 @@ export function TutorApp() {
           </main>
         )}
       </SidebarInset>
+      <KeyDialog
+        open={keyDialog.open}
+        onOpenChange={(open) => setKeyDialog((d) => ({ ...d, open }))}
+        reason={keyDialog.reason}
+        freeLimit={status?.quota?.lessons.limit}
+        onSaved={refreshStatus}
+      />
     </SidebarProvider>
   )
 }

@@ -186,6 +186,9 @@ playback can be tried with no credentials.
 | `LESSON_REASONING` | no | `none` | Thinking effort: `none` (fastest), `minimal`, `low`, `medium`, `high` |
 | `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
 | `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |
+| `FREE_LESSONS` | no | `16` | Free lessons per visitor before they must add their own key |
+| `FREE_FOLLOWUPS` | no | `48` | Free follow-up questions per visitor |
+| `USAGE_SECRET` | recommended in production | any long random string | Signs the usage cookie (falls back to the gateway key) |
 | `MOCK_AI` | no | `1` | Force sample mode |
 
 ### Deploying
@@ -208,6 +211,20 @@ A two-minute lesson is roughly 1,800 characters of narration. Approximate list p
 
 Narration is requested once per segment and cached for the tab, so replaying, seeking and restarting cost nothing extra; reopening a saved lesson later re-requests the audio.
 
+## Limits and bring-your-own-key
+
+The demo runs on one shared AI Gateway key, so spending is capped:
+
+- **16 free lessons per visitor** (and 48 follow-up questions). Usage is kept in a signed, HttpOnly cookie, so it can't be edited,
+  and the sidebar shows how many lessons are left. Narration audio is only served for lessons the visitor actually started.
+- **Burst and daily limits per IP** (30 requests / 10 min, 48 / day) as a backstop.
+- **After the free allowance, visitors can add their own Vercel AI Gateway key** (sidebar → "Use your own key"). The key is verified
+  with a one-word request, kept only in the visitor's browser (localStorage), and sent in an `x-chalk-key` header so the server can call
+  the gateway on their account. It is never stored or logged, and it removes the limits (they pay for their own usage).
+
+Honest limitation: a cookie can be deleted, and the per-IP counters are per server instance. That is enough to stop casual abuse of
+a demo; for a hard guarantee, move the counters into a shared store (Vercel KV / Upstash) keyed by IP or user.
+
 ## Limitations and what I'd do next
 
 - **Layout is model-planned.** The prompt and clamping prevent most problems,
@@ -222,7 +239,6 @@ Narration is requested once per segment and cached for the tab, so replaying, se
 - **No persistence or accounts.** Lessons live in memory for the tab. Saving and
   sharing lessons (the structured format makes this cheap) is the obvious next
   feature, along with spaced-repetition quizzes.
-- **Rate limiting is per server instance** (in-memory). A production deployment
-  would use a shared store such as Redis/KV, plus bot protection.
+- **Quota is cookie + per-instance memory.** See "Limits and bring-your-own-key"; production would use a shared store (Redis/KV) and bot protection.
 - **No math typesetting** on the board; formulas are handwritten text.
 - **English only** for now; the schema and voices support other languages.

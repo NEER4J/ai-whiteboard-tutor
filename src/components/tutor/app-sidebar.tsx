@@ -42,18 +42,23 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { clearSessions, deleteSession, groupByDay, useSessionList } from "@/lib/sessions"
 import { Credit } from "./credit"
+import { UsageCard } from "./usage-card"
 import { Logo } from "./logo"
 
-type Status = { mode: "live" | "sample"; model: string | null } | null
+export type Quota = { lessons: { used: number; limit: number }; followups: { used: number; limit: number } }
+export type AppStatus = { mode: "live" | "sample"; model: string | null; voice?: string | null; quota?: Quota | null } | null
+type Status = AppStatus
 
 type Props = {
   activeId: string | null
   status: Status
+  userKey: string | null
+  onManageKey: () => void
   onNew: () => void
   onOpen: (id: string) => void
 }
 
-export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
+export function AppSidebar({ activeId, status, userKey, onManageKey, onNew, onOpen }: Props) {
   const sessions = useSessionList()
   const [query, setQuery] = React.useState("")
   const { isMobile, setOpenMobile } = useSidebar()
@@ -197,16 +202,7 @@ export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className="rounded-xl bg-sidebar-accent/60 px-3 py-2.5">
-          <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-            <span className={status?.mode === "live" ? "size-1.5 rounded-full bg-emerald-500" : "size-1.5 rounded-full bg-amber-500"} />
-            {!status ? "Checking…" : status.mode === "live" ? `Live AI · ${status.model?.split("/")[1] ?? ""}` : "Sample mode"}
-          </div>
-          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-            {status?.mode === "sample" ? "No AI key is set, so lessons are pre-written. " : ""}
-            Your lessons are saved only in this browser.
-          </p>
-        </div>
+        <UsageCard status={status} userKey={userKey} onManageKey={onManageKey} />
         <Credit className="-ml-1 self-start" />
       </SidebarFooter>
     </Sidebar>

@@ -1,6 +1,7 @@
 "use client"
 
 import { parsePartialJson } from "ai"
+import { keyHeaders } from "./byok"
 import { BOARD_H, BOARD_W, elementSchema, type BoardElement, type LessonRequest, type Segment } from "./schema"
 
 export type ClipUpdate = {
@@ -10,6 +11,9 @@ export type ClipUpdate = {
   done: boolean
   mode: "live" | "sample"
 }
+
+/** The free allowance is used up: the learner needs to add their own key. */
+export class QuotaError extends Error {}
 
 const ERROR_MARK = "\u0000ERROR:"
 
@@ -25,12 +29,13 @@ export async function streamClip(
 ): Promise<ClipUpdate> {
   const res = await fetch("/api/lesson", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...keyHeaders() },
     body: JSON.stringify(body),
     signal,
   })
   if (!res.ok || !res.body) {
     const err = await res.json().catch(() => null)
+    if (res.status === 402 || err?.code === "quota_exceeded") throw new QuotaError(err?.error ?? "Free allowance used.")
     throw new Error(err?.error ?? `Request failed (${res.status})`)
   }
   const mode = res.headers.get("x-tutor-mode") === "sample" ? "sample" : "live"
