@@ -56,7 +56,7 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 
 | Part | Status |
 | --- | --- |
-| Lesson generation (narration + diagrams) | **Live** — `anthropic/claude-sonnet-5.5` via Vercel AI Gateway, streamed |
+| Lesson generation (narration + diagrams) | **Live** — `anthropic/claude-haiku-5.5` with thinking off, via Vercel AI Gateway, streamed |
 | Follow-up answers, quizzes, grading | **Live** — same model, with lesson + position + chat history as context |
 | Narration voice | **Live** — `openai/tts-1` via AI Gateway (one mp3 per segment) |
 | Voice fallback | Browser `speechSynthesis` (local, not AI) if AI speech fails, or if you choose it with the voice button |
@@ -180,7 +180,8 @@ playback can be tried with no credentials.
 | Name | Required | Example | Purpose |
 | --- | --- | --- | --- |
 | `AI_GATEWAY_API_KEY` | for live AI (not needed on Vercel with OIDC) | `vck_xxx` | Vercel AI Gateway key |
-| `LESSON_MODEL` | no | `anthropic/claude-sonnet-5.5` | Text model for lessons and follow-ups |
+| `LESSON_MODEL` | no | `anthropic/claude-haiku-5.5` | Text model for lessons and follow-ups (Haiku for speed; try `anthropic/claude-sonnet-5.5` for richer diagrams) |
+| `LESSON_REASONING` | no | `none` | Thinking effort: `none` (fastest), `minimal`, `low`, `medium`, `high` |
 | `TTS_MODEL` | no | `openai/tts-1` | Speech model for narration |
 | `TTS_VOICE` | no | `nova` | Voice name for the speech model |
 | `MOCK_AI` | no | `1` | Force sample mode |

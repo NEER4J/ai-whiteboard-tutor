@@ -1,7 +1,15 @@
 import "server-only"
 
 /** Text model used for lessons and follow-ups (any Vercel AI Gateway model id). */
-export const LESSON_MODEL = process.env.LESSON_MODEL || "anthropic/claude-sonnet-5.5"
+export const LESSON_MODEL = process.env.LESSON_MODEL || "anthropic/claude-haiku-5.5"
+/**
+ * Reasoning effort for the lesson model. "none" turns thinking off so lessons
+ * start streaming as fast as possible (the lesson format is structured and the
+ * prompt already carries the layout rules).
+ */
+const EFFORTS = ["none", "minimal", "low", "medium", "high"] as const
+const effort = process.env.LESSON_REASONING as (typeof EFFORTS)[number] | undefined
+export const LESSON_REASONING: (typeof EFFORTS)[number] = effort && EFFORTS.includes(effort) ? effort : "none"
 /** Speech model used for narration (any Vercel AI Gateway speech model id). */
 export const TTS_MODEL = process.env.TTS_MODEL || "openai/tts-1"
 export const TTS_VOICE = process.env.TTS_VOICE || "nova"

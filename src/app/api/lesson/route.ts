@@ -6,7 +6,7 @@ import {
   lessonSystemPrompt,
   lessonUserPrompt,
 } from "@/lib/prompts"
-import { LESSON_MODEL, clientIp, isLive } from "@/lib/server/config"
+import { LESSON_MODEL, LESSON_REASONING, clientIp, isLive } from "@/lib/server/config"
 import { rateLimit } from "@/lib/server/rate-limit"
 import { SAMPLE_FOLLOWUP, SAMPLE_LESSON } from "@/lib/server/sample"
 
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
   const media = (body.attachments ?? []).filter((a) => a.kind !== "text")
   const result = streamText({
     model: LESSON_MODEL,
+    reasoning: LESSON_REASONING,
     system: isLesson ? lessonSystemPrompt(body.level) : followupSystemPrompt(body.level),
     ...(media.length
       ? {
