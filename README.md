@@ -46,8 +46,8 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 ## Access for reviewers
 
 - **Open https://chalk.itsneeraj.com/** in any modern browser. No sign-up and no setup.
-- The demo runs on live AI (Claude Haiku 5.5 for lessons, Gemini TTS for the voice). Each visitor gets **16 free prompts** in total
-  (a lesson, a follow-up, a quiz answer or a hint each count as one); the sidebar shows how many are left.
+- The demo runs on live AI (Claude Haiku 5.5 for lessons, Gemini TTS for the voice). Each visitor gets **10 free prompts per day**
+  (a lesson, a follow-up, a quiz answer or a hint each count as one). Limits reset at midnight UTC; the sidebar shows how many are left today.
 - If you use them all, either come back later or **add your own Vercel AI Gateway key** (sidebar → *Use your own key*). It stays in your
   browser and is never stored by the server.
 - If the live AI is ever unavailable, the app falls back to a clearly labelled **sample mode** with one pre-written lesson, so the
@@ -210,8 +210,8 @@ playback can be tried with no credentials.
 | `LESSON_REASONING` | no | `none` | Thinking effort: `none` (fastest), `minimal`, `low`, `medium`, `high` |
 | `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
 | `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |
-| `FREE_PROMPTS` | no | `16` | Free prompts per visitor (lessons, follow-ups, quiz answers and hints all count) before they must add their own key |
-| `FREE_PER_IP_DAY` / `GLOBAL_DAILY_PROMPTS` | no | `32` / `400` | Per-IP and whole-demo daily caps on free prompts |
+| `FREE_PROMPTS` | no | `10` | Free prompts per visitor (lessons, follow-ups, quiz answers and hints all count) before they must add their own key |
+| `FREE_PER_IP_DAY` / `GLOBAL_DAILY_PROMPTS` | no | `10` / `400` | Per-IP and whole-demo daily caps on free prompts |
 | `TTS_PER_IP_DAY` / `GLOBAL_DAILY_TTS` | no | `320` / `4000` | Same for narration clips |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | recommended in production | from the Upstash integration | Shared counters (also accepted as `KV_REST_API_URL` / `KV_REST_API_TOKEN`) |
 | `USAGE_SECRET` | recommended in production | any long random string | Signs the usage cookie (falls back to the gateway key) |
@@ -249,8 +249,8 @@ The demo runs on one shared AI Gateway key, so spending is capped in layers:
 
 | Layer | Limit | Survives incognito / cleared cookies? |
 | --- | --- | --- |
-| Per browser (signed HttpOnly cookie) | **16 free prompts**: a lesson, follow-up, quiz answer or hint each cost one | No (it is the friendly, visible limit) |
-| Per IP address (hashed, never stored raw) | 32 prompts per day, 320 voice clips per day | **Yes** |
+| Per browser (signed HttpOnly cookie) | **10 free prompts per day**: a lesson, follow-up, quiz answer or hint each cost one | No (it is the friendly, visible limit) |
+| Per IP address (hashed, never stored raw) | **10 prompts per day** in total, 320 voice clips per day | **Yes** |
 | Whole demo (circuit breaker) | 400 prompts per day, 4,000 voice clips per day | **Yes** |
 | Short burst limit | 30 requests / 10 min per IP | Yes |
 

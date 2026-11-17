@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     const usage = readUsage(req)
     if (promptsUsed(usage) >= FREE_PROMPTS) {
       return Response.json(
-        { error: `You've used all ${FREE_PROMPTS} free prompts. Add your own AI Gateway key to keep learning.`, code: "quota_exceeded" },
+        { error: `You've used all ${FREE_PROMPTS} free prompts for today. Add your own AI Gateway key to keep learning, or come back tomorrow.`, code: "quota_exceeded" },
         { status: 402 }
       )
     }

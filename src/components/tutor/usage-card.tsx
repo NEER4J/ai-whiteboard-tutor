@@ -20,7 +20,7 @@ export function UsageCard({ status, userKey, onManageKey }: { status: AppStatus;
     <div className="flex flex-col gap-2.5 rounded-xl bg-sidebar-accent/60 p-3">
       {/* headline */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium">{userKey ? "Your own key" : status?.mode === "sample" ? "Sample mode" : "Free prompts"}</span>
+        <span className="text-xs font-medium">{userKey ? "Your own key" : status?.mode === "sample" ? "Sample mode" : "Free prompts today"}</span>
         {userKey ? (
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
             No limit
