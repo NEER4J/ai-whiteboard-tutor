@@ -58,7 +58,7 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 | --- | --- |
 | Lesson generation (narration + diagrams) | **Live** — `anthropic/claude-haiku-5.5` with thinking off, via Vercel AI Gateway, streamed |
 | Follow-up answers, quizzes, grading | **Live** — same model, with lesson + position + chat history as context |
-| Narration voice | **Live** — `openai/tts-1` via AI Gateway (one mp3 per segment) |
+| Narration voice | **Live** — `google/gemini-3.8-flash-lite-tts` via AI Gateway (one clip per segment) |
 | Voice fallback | Browser `speechSynthesis` (local, not AI) if AI speech fails, or if you choose it with the voice button |
 | Hand-drawn rendering, animation, sync | Deterministic client code (rough.js + SVG), no AI at render time |
 | **Sample mode** | If the server has **no AI credentials**, the header shows "Sample mode", every topic plays one **pre-written** lesson ("Why is the sky blue?"), follow-ups return a placeholder, and the browser voice narrates. Nothing in sample mode is presented as AI output. |
@@ -82,7 +82,7 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 └──────────────────────────────────────────────────────────────────┘
 Server (Next.js route handlers)
   /api/lesson  streamText + Output.object(zod clip schema) → AI Gateway
-  /api/tts     generateSpeech(gateway.speech(TTS_MODEL)) → audio/mpeg
+  /api/tts     generateSpeech(gateway.speech(TTS_MODEL)) → audio
   /api/status  live vs sample mode for the UI badge
 ```
 
@@ -182,8 +182,8 @@ playback can be tried with no credentials.
 | `AI_GATEWAY_API_KEY` | for live AI (not needed on Vercel with OIDC) | `vck_xxx` | Vercel AI Gateway key |
 | `LESSON_MODEL` | no | `anthropic/claude-haiku-5.5` | Text model for lessons and follow-ups (Haiku for speed; try `anthropic/claude-sonnet-5.5` for richer diagrams) |
 | `LESSON_REASONING` | no | `none` | Thinking effort: `none` (fastest), `minimal`, `low`, `medium`, `high` |
-| `TTS_MODEL` | no | `openai/tts-1` | Speech model for narration |
-| `TTS_VOICE` | no | `nova` | Voice name for the speech model |
+| `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
+| `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |
 | `MOCK_AI` | no | `1` | Force sample mode |
 
 ### Deploying
@@ -192,6 +192,19 @@ Deploy to Vercel (`vercel deploy` or import the repo). Add `AI_GATEWAY_API_KEY`
 in Project → Settings → Environment Variables, or turn on AI Gateway for the
 project to use OIDC authentication. `/api/lesson` declares `maxDuration = 120`
 for long generations.
+
+## Cost
+
+A two-minute lesson is roughly 1,800 characters of narration. Approximate list prices through AI Gateway:
+
+| Part | Model | Per lesson |
+| --- | --- | --- |
+| Narration (default) | `google/gemini-3.8-flash-lite-tts` | about $0.017 |
+| Narration (alternative) | `fish-audio/drama-3` | about $0.018 |
+| Narration (previous default) | `openai/tts-1` | about $0.027 |
+| Lesson text | `anthropic/claude-haiku-5.5`, thinking off | well under $0.01 |
+
+Narration is requested once per segment and cached for the tab, so replaying, seeking and restarting cost nothing extra; reopening a saved lesson later re-requests the audio.
 
 ## Limitations and what I'd do next
 

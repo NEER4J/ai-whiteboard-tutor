@@ -23,8 +23,9 @@ export async function POST(req: Request) {
     const { audio } = await generateSpeech({
       model: gateway.speech(TTS_MODEL),
       text: parsed.data.text,
-      voice: TTS_VOICE,
-      outputFormat: "mp3",
+      ...(TTS_VOICE ? { voice: TTS_VOICE } : {}),
+      // Only OpenAI honours mp3; other providers return their native browser-playable format.
+      ...(TTS_MODEL.startsWith("openai/") ? { outputFormat: "mp3" } : {}),
       abortSignal: req.signal,
     })
     return new Response(audio.uint8Array as Uint8Array<ArrayBuffer>, {
