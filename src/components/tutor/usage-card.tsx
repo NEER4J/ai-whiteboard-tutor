@@ -15,7 +15,6 @@ export function UsageCard({ status, userKey, onManageKey }: { status: AppStatus;
   const left = quota ? Math.max(0, quota.prompts.limit - quota.prompts.used) : null
   const out = left === 0 && !userKey
   const live = !!userKey || status?.mode === "live"
-  const model = status?.model?.split("/")[1]
 
   return (
     <div className="flex flex-col gap-2.5 rounded-xl bg-sidebar-accent/60 p-3">
@@ -59,7 +58,7 @@ export function UsageCard({ status, userKey, onManageKey }: { status: AppStatus;
             ? "Checking…"
             : status.mode === "sample" && !userKey
               ? "No AI key set: lessons are pre-written."
-              : `Live AI${model ? ` · ${model}` : ""}`}
+              : "Live"}
           {" · "}Lessons stay in this browser.
         </span>
       </p>

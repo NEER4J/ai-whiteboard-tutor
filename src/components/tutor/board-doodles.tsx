@@ -108,31 +108,53 @@ const POOL: Doodle[] = [
       </>
     ),
   },
+  {
+    id: "squiggle",
+    color: "text-sky-300",
+    node: <path d="M0 20 C20 -10 40 50 60 20 S100 -10 120 20" />,
+  },
+  {
+    id: "plus",
+    color: "text-amber-300",
+    node: <path d="M30 0 V60 M0 30 H60" />,
+  },
+  {
+    id: "loop",
+    color: "text-violet-300",
+    node: <path d="M10 40 C-10 10 40 -10 50 20 C58 44 20 56 20 30 C20 10 60 10 80 30" />,
+  },
 ]
 
 type Placed = { id: string; color: string; node: React.ReactNode; x: number; y: number; rot: number; scale: number }
 
 function makeLayout(): Placed[] {
   const rand = (a: number, b: number) => a + Math.random() * (b - a)
-  // The triangle is always pinned to the very top edge, at a random spot along it.
-  const triangle = POOL.find((d) => d.id === "triangle")!
-  const placed: Placed[] = [{ ...triangle, x: rand(120, W - 320), y: rand(-14, 4), rot: rand(-6, 6), scale: rand(0.95, 1.15) }]
-  const picks = POOL.filter((d) => d.id !== "triangle")
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 4)
+  // Small doodles scattered around the edges only: left and right margins plus thin top and bottom strips.
+  // The middle is left clear for the greeting, prompt box and cards.
+  const picks = [...POOL].sort(() => Math.random() - 0.5).slice(0, 11)
+  const placed: Placed[] = []
   for (const d of picks) {
     let x = 0
     let y = 0
-    for (let tries = 0; tries < 60; tries++) {
-      x = rand(40, W - 220)
-      y = rand(120, H - 180)
-      const dx = (x + 80 - W / 2) / 360
-      const dy = (y + 60 - H / 2) / 280
-      const outsideCentre = dx * dx + dy * dy > 1
-      const apart = placed.every((p) => Math.hypot(p.x - x, p.y - y) > 240)
-      if (outsideCentre && apart) break
+    const scale = rand(0.4, 0.68)
+    for (let tries = 0; tries < 120; tries++) {
+      const band = Math.floor(Math.random() * 4)
+      if (band === 0) {
+        x = rand(6, 120)
+        y = rand(10, H - 110)
+      } else if (band === 1) {
+        x = rand(W - 260, W - 120)
+        y = rand(10, H - 110)
+      } else if (band === 2) {
+        x = rand(150, W - 300)
+        y = rand(6, 60)
+      } else {
+        x = rand(150, W - 300)
+        y = rand(H - 120, H - 70)
+      }
+      if (placed.every((p) => Math.hypot(p.x - x, p.y - y) > 150)) break
     }
-    placed.push({ ...d, x, y, rot: rand(-12, 12), scale: rand(0.85, 1.2) })
+    placed.push({ ...d, x, y, rot: rand(-14, 14), scale })
   }
   return placed
 }
