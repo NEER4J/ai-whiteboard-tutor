@@ -100,6 +100,23 @@ export function HeaderActions({ inLesson, title, items, clips, onNew, onFullscre
     <div className="ml-auto flex shrink-0 items-center gap-0.5">
       {/* Phones: one overflow menu instead of a row of icons */}
       <div className="flex items-center @5xl/header:hidden">
+        {/* While exporting (or once it is ready) the loader / download button sits in the header itself, not inside the menu */}
+        {inLesson && exporter?.api.state.phase === "working" && (
+          <button
+            type="button"
+            onClick={exporter.api.cancel}
+            aria-label={`Exporting video ${Math.round(exporter.api.state.ratio * 100)}%. Tap to cancel`}
+            className="mr-1 flex h-8 items-center gap-1.5 rounded-lg bg-secondary px-2.5 text-xs font-medium tabular-nums"
+          >
+            <Ring value={exporter.api.state.ratio} />
+            {Math.round(exporter.api.state.ratio * 100)}%
+          </button>
+        )}
+        {inLesson && exporter?.api.state.phase === "done" && (
+          <Button size="sm" className="mr-1 h-8" onClick={() => exporter.api.download(title)} aria-label="Download video">
+            <DownloadIcon data-icon="inline-start" /> Video
+          </Button>
+        )}
         {inLesson ? (
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="More options" />}>
