@@ -167,8 +167,8 @@ export default function DocsPage() {
             <li>With your own key there is no free-tier limit; usage is billed to your account. Remove the key any time.</li>
           </ul>
           <P>
-            Limits are enforced on the server: a signed cookie for the visible 16-prompt allowance, plus a per-IP daily cap and a whole-demo daily
-            budget that clearing cookies or opening a private window does not reset. If the daily cap for your network or for the whole demo is hit,
+            Limits are enforced on the server: 10 free prompts per day per browser (a signed cookie), 10 per day per IP address, and a hard cap of 50
+            free prompts per day across all visitors. The IP and global counters live in Redis, so clearing cookies or opening a private window does not reset them. Everything resets at midnight UTC. If the daily cap for your network or for the whole demo is hit,
             Chalk says so and offers the same option: add your own key, or come back tomorrow.
           </P>
 

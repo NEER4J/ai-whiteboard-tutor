@@ -211,8 +211,8 @@ playback can be tried with no credentials.
 | `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
 | `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |
 | `FREE_PROMPTS` | no | `10` | Free prompts per visitor (lessons, follow-ups, quiz answers and hints all count) before they must add their own key |
-| `FREE_PER_IP_DAY` / `GLOBAL_DAILY_PROMPTS` | no | `10` / `400` | Per-IP and whole-demo daily caps on free prompts |
-| `TTS_PER_IP_DAY` / `GLOBAL_DAILY_TTS` | no | `320` / `4000` | Same for narration clips |
+| `FREE_PER_IP_DAY` / `GLOBAL_DAILY_PROMPTS` | no | `10` / `50` | Per-IP and whole-demo daily caps on free prompts |
+| `TTS_PER_IP_DAY` / `GLOBAL_DAILY_TTS` | no | `320` / `800` | Same for narration clips |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | recommended in production | from the Upstash integration | Shared counters (also accepted as `KV_REST_API_URL` / `KV_REST_API_TOKEN`) |
 | `USAGE_SECRET` | recommended in production | any long random string | Signs the usage cookie (falls back to the gateway key) |
 | `NEXT_PUBLIC_SITE_URL` | recommended once you have a domain | `https://chalk.example.com` | Public origin for canonical, social preview and sitemap URLs (on Vercel the production URL is used automatically) |
@@ -251,7 +251,7 @@ The demo runs on one shared AI Gateway key, so spending is capped in layers:
 | --- | --- | --- |
 | Per browser (signed HttpOnly cookie) | **10 free prompts per day**: a lesson, follow-up, quiz answer or hint each cost one | No (it is the friendly, visible limit) |
 | Per IP address (hashed, never stored raw) | **10 prompts per day** in total, 320 voice clips per day | **Yes** |
-| Whole demo (circuit breaker) | 400 prompts per day, 4,000 voice clips per day | **Yes** |
+| Whole demo (circuit breaker) | 50 prompts per day and 800 voice clips per day, across all visitors | **Yes** |
 | Short burst limit | 30 requests / 10 min per IP | Yes |
 
 Past a limit, the app explains why and offers to **use your own Vercel AI Gateway key** (sidebar → *Use your own key*). The key is
