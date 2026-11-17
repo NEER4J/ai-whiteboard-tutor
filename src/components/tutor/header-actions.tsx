@@ -41,6 +41,10 @@ export function buildTranscript(title: string, items: ChatItem[], clips: Record<
       out.push(`**You:** ${it.text}`, "")
       continue
     }
+    if ("text" in it) {
+      out.push(`**Tutor:** ${it.text}`, "")
+      continue
+    }
     const clip = clips[it.clipId]
     if (!clip) continue
     if (clip.reply) out.push(`**Tutor:** ${clip.reply}`, "")

@@ -18,6 +18,7 @@ import { useAttachments } from "@/lib/use-attachments"
 import { FileTextIcon } from "lucide-react"
 import { AttachButton, AttachmentChips } from "./attachment-chips"
 import { AssistantMessage } from "./assistant-message"
+import { LogoMark } from "./logo"
 import { PromptBox } from "./prompt-box"
 import type { ChatItem, ClipState } from "./types"
 
@@ -36,6 +37,10 @@ type Props = {
   level: string
   busy: boolean
   textareaRef: React.Ref<HTMLTextAreaElement>
+  /** A conversation with no lesson yet: plain replies, no quick-reply chips. */
+  chatOnly?: boolean
+  /** Chalk is writing a reply. */
+  typing?: boolean
 }
 
 const QUICK = [
@@ -77,6 +82,15 @@ export function ChatPanel(props: Props) {
                         ) : null}
                       </MessageContent>
                     </Message>
+                  ) : "text" in item ? (
+                    <Message>
+                      <MessageContent>
+                        <div className="flex gap-3">
+                          <LogoMark className="mt-1 h-5 w-6 shrink-0 text-foreground" />
+                          <p className="min-w-0 text-[15px] leading-relaxed whitespace-pre-wrap">{item.text}</p>
+                        </div>
+                      </MessageContent>
+                    </Message>
                   ) : (
                     <AssistantMessage
                       clip={clips[item.clipId]}
@@ -108,6 +122,16 @@ export function ChatPanel(props: Props) {
                   )}
                 </MessageScrollerItem>
               ))}
+              {props.typing && (
+                <div className="flex items-center gap-3 px-0.5" role="status" aria-label="Chalk is typing">
+                  <LogoMark className="h-5 w-6 shrink-0 text-muted-foreground" />
+                  <span className="flex gap-1">
+                    {[0, 1, 2].map((d) => (
+                      <span key={d} className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60" style={{ animationDelay: `${d * 120}ms` }} />
+                    ))}
+                  </span>
+                </div>
+              )}
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />
@@ -115,7 +139,7 @@ export function ChatPanel(props: Props) {
       </MessageScrollerProvider>
 
       <div className="flex flex-col gap-2 px-3 pt-1 pb-3">
-        <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
+        <div className={props.chatOnly ? "hidden" : "flex gap-1.5 overflow-x-auto [scrollbar-width:none]"}>
           {QUICK.map((q) => (
             <Button
               key={q.label}
@@ -138,7 +162,7 @@ export function ChatPanel(props: Props) {
           onPasteFiles={add}
           header={files.length ? <AttachmentChips files={files} onRemove={remove} /> : undefined}
           addon={<AttachButton onFiles={add} />}
-          placeholder="Ask a follow-up question…"
+          placeholder={props.chatOnly ? "Message Chalk…" : "Ask a follow-up question…"}
           busy={busy}
           onStop={onStop}
         />

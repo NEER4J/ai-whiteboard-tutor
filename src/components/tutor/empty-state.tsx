@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { DnaIcon, HeartPulseIcon, OrbitIcon, PlaneIcon, RocketIcon, SatelliteDishIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Attachment } from "@/lib/attachments"
-import { useAttachments } from "@/lib/use-attachments"
-import { keyHeaders } from "@/lib/byok"
 import { SUGGESTIONS } from "@/lib/intent"
+import { useAttachments } from "@/lib/use-attachments"
 import type { Level } from "@/lib/schema"
 import { AttachButton, AttachmentChips } from "./attachment-chips"
 import { Credit } from "./credit"
@@ -14,17 +14,15 @@ import { LevelSlider } from "./level-slider"
 import { LogoMark } from "./logo"
 import { PromptBox } from "./prompt-box"
 
-// Visual, "wow" starters. Each chip has its own pastel (written out in full so Tailwind sees the classes).
+// Visual, "wow" starters. Each chip has its own pastel and icon (written out in full so Tailwind sees the classes).
 const STARTERS = [
-  { text: "How does a jet engine make thrust?", emoji: "✈️", chip: "bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-400/20" },
-  { text: "Inside a beating heart: how blood flows", emoji: "🫀", chip: "bg-rose-50 hover:bg-rose-100 dark:bg-rose-400/10 dark:hover:bg-rose-400/20" },
-  { text: "How do black holes bend light?", emoji: "🌌", chip: "bg-violet-50 hover:bg-violet-100 dark:bg-violet-400/10 dark:hover:bg-violet-400/20" },
-  { text: "How does GPS find you from space?", emoji: "🛰️", chip: "bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/20" },
-  { text: "How does CRISPR edit DNA?", emoji: "🧬", chip: "bg-amber-50 hover:bg-amber-100 dark:bg-amber-400/10 dark:hover:bg-amber-400/20" },
-  { text: "How does a rocket reach orbit?", emoji: "🚀", chip: "bg-orange-50 hover:bg-orange-100 dark:bg-orange-400/10 dark:hover:bg-orange-400/20" },
+  { text: "How does a jet engine make thrust?", icon: PlaneIcon, chip: "bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-400/20", tint: "text-sky-600 dark:text-sky-300" },
+  { text: "Inside a beating heart: how blood flows", icon: HeartPulseIcon, chip: "bg-rose-50 hover:bg-rose-100 dark:bg-rose-400/10 dark:hover:bg-rose-400/20", tint: "text-rose-600 dark:text-rose-300" },
+  { text: "How do black holes bend light?", icon: OrbitIcon, chip: "bg-violet-50 hover:bg-violet-100 dark:bg-violet-400/10 dark:hover:bg-violet-400/20", tint: "text-violet-600 dark:text-violet-300" },
+  { text: "How does GPS find you from space?", icon: SatelliteDishIcon, chip: "bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/20", tint: "text-emerald-600 dark:text-emerald-300" },
+  { text: "How does CRISPR edit DNA?", icon: DnaIcon, chip: "bg-amber-50 hover:bg-amber-100 dark:bg-amber-400/10 dark:hover:bg-amber-400/20", tint: "text-amber-600 dark:text-amber-300" },
+  { text: "How does a rocket reach orbit?", icon: RocketIcon, chip: "bg-orange-50 hover:bg-orange-100 dark:bg-orange-400/10 dark:hover:bg-orange-400/20", tint: "text-orange-600 dark:text-orange-300" },
 ]
-
-type ChatMsg = { role: "user" | "assistant"; text: string }
 
 const noopSubscribe = () => () => {}
 function greeting() {
@@ -36,12 +34,14 @@ type Props = {
   level: Level
   setLevel: (l: Level) => void
   onStart: (topic: string, attachments?: Attachment[]) => void
+  /** Start a conversation with Chalk (opens the chat page). */
+  onChat: (message: string) => void
   /** A friendly message from the tutor instead of a lesson (e.g. after "hi"). */
   notice?: string | null
   onClearNotice?: () => void
 }
 
-export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: Props) {
+export function EmptyState({ level, setLevel, onStart, onChat, notice, onClearNotice }: Props) {
   const [topic, setTopic] = React.useState("")
   const { files, add, remove } = useAttachments()
   const [localNotice, setLocalNotice] = React.useState<string | null>(null)
@@ -49,48 +49,16 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
   // Time-of-day greeting without a hydration mismatch.
   const hello = React.useSyncExternalStore(noopSubscribe, greeting, () => "Hello")
 
-  const [thread, setThread] = React.useState<ChatMsg[]>([])
-  const [thinking, setThinking] = React.useState(false)
-  const endRef = React.useRef<HTMLDivElement>(null)
-  React.useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
-  }, [thread, thinking])
-
-  /** Everything typed here is a conversation: Chalk answers, or decides to make a lesson (the create_lesson tool). */
-  const send = async (text: string) => {
+  /** Typing here opens a chat. Attached material always becomes a lesson right away. */
+  const send = (text: string) => {
     const message = text.trim()
     setLocalNotice(null)
     onClearNotice?.()
-    // Attached material always becomes a lesson.
     if (files.length) {
       onStart(message || `the attached ${files.length > 1 ? "material" : files[0].name}`, files)
       return
     }
-    if (!message || thinking) return
-    setTopic("")
-    const history = thread.slice(-8)
-    setThread((t) => [...t, { role: "user", text: message }])
-    setThinking(true)
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "content-type": "application/json", ...keyHeaders() },
-        body: JSON.stringify({ message, level, history }),
-      })
-      const data = (await res.json().catch(() => null)) as { reply?: string; lessonTopic?: string; error?: string } | null
-      if (!res.ok || !data) throw new Error(data?.error ?? "Chalk couldn't reply just now. Please try again.")
-      if (data.reply) setThread((t) => [...t, { role: "assistant", text: data.reply! }])
-      if (data.lessonTopic) {
-        // Let the reply be seen for a beat, then start the lesson.
-        await new Promise((r) => setTimeout(r, 900))
-        onStart(data.lessonTopic)
-        setThread([])
-      }
-    } catch (e) {
-      setThread((t) => [...t, { role: "assistant", text: (e as Error).message }])
-    } finally {
-      setThinking(false)
-    }
+    if (message.length >= 1) onChat(message)
   }
 
   return (
@@ -125,7 +93,7 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
               onClearNotice?.()
             }
           }}
-          onSubmit={() => void send(topic)}
+          onSubmit={() => send(topic)}
           placeholder="Ask anything, or say what you want to learn…"
           onPasteFiles={add}
           header={files.length ? <AttachmentChips files={files} onRemove={remove} /> : undefined}
@@ -158,35 +126,7 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
           </div>
         )}
 
-        {thread.length > 0 && (
-          <div className="-mt-4 flex flex-col gap-3" aria-live="polite">
-            {thread.map((m, i) =>
-              m.role === "user" ? (
-                <div key={i} className="ml-auto max-w-[85%] animate-in rounded-2xl rounded-br-md bg-muted px-4 py-2.5 text-sm duration-200 fade-in slide-in-from-bottom-1">
-                  {m.text}
-                </div>
-              ) : (
-                <div key={i} className="flex animate-in gap-3 rounded-2xl bg-muted/50 p-3.5 duration-300 fade-in slide-in-from-bottom-1 dark:bg-muted/30">
-                  <LogoMark className="mt-0.5 h-5 w-6 shrink-0 text-foreground" />
-                  <p className="min-w-0 text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
-                </div>
-              )
-            )}
-            {thinking && (
-              <div className="flex items-center gap-3 px-3.5 py-1" role="status" aria-label="Chalk is typing">
-                <LogoMark className="h-5 w-6 shrink-0 text-muted-foreground" />
-                <span className="flex gap-1">
-                  {[0, 1, 2].map((d) => (
-                    <span key={d} className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60" style={{ animationDelay: `${d * 120}ms` }} />
-                  ))}
-                </span>
-              </div>
-            )}
-            <div ref={endRef} />
-          </div>
-        )}
-
-        {shownNotice && thread.length === 0 && (
+        {shownNotice && (
           <div className="-mt-4 flex animate-in gap-3 rounded-2xl bg-muted/60 p-3.5 duration-300 fade-in slide-in-from-top-1 dark:bg-muted/40" role="status">
             <LogoMark className="mt-0.5 h-5 w-6 shrink-0 text-foreground" />
             <p className="text-sm leading-relaxed">{shownNotice}</p>
@@ -194,15 +134,14 @@ export function EmptyState({ level, setLevel, onStart, notice, onClearNotice }: 
         )}
 
         <div className="-mt-3 flex flex-wrap gap-2" aria-label="Suggested topics">
-          {STARTERS.map(({ text, emoji, chip }) => (
+          {STARTERS.map(({ text, icon: Icon, chip, tint }) => (
             <button
               key={text}
               type="button"
-              disabled={thinking}
-              onClick={() => onStart(text)}
-              className={cn("flex items-center gap-2 rounded-full px-3.5 py-2 text-sm text-foreground/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50", chip)}
+                            onClick={() => onStart(text)}
+              className={cn("flex items-center gap-2 rounded-full px-3.5 py-2 text-sm text-foreground/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none", chip)}
             >
-              <span aria-hidden>{emoji}</span>
+              <Icon className={cn("size-4 shrink-0", tint)} aria-hidden />
               {text}
             </button>
           ))}

@@ -16,6 +16,8 @@ export type ClipState = {
 export type ChatItem =
   | { id: string; role: "user"; text: string; files?: string[] }
   | { id: string; role: "assistant"; clipId: string }
+  /** A plain chat reply (no whiteboard). */
+  | { id: string; role: "assistant"; text: string }
 
 export type Session = {
   topic: string

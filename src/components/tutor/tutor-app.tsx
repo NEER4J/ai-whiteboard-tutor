@@ -9,6 +9,7 @@ import { Player } from "@/lib/player"
 import type { BoardElement, LessonRequest, Level } from "@/lib/schema"
 import { videoExportSupported } from "@/lib/export-video"
 import { useVideoExport } from "@/lib/use-video-export"
+import { keyHeaders } from "@/lib/byok"
 import { findSessionByTopic, getSession, saveSession } from "@/lib/sessions"
 import { useUserKey } from "@/lib/byok"
 import { setVoiceModelId } from "@/lib/voice"
@@ -69,6 +70,8 @@ export function TutorApp() {
   const [activeId, setActiveId] = React.useState<string | null>(null)
   const [lessonId, setLessonId] = React.useState<string | null>(null)
   const [input, setInput] = React.useState("")
+  const [chatting, setChatting] = React.useState(false)
+  const activeSessionRef = React.useRef<string | null>(null)
   const [notice, setNotice] = React.useState<string | null>(null)
   const [ink, setInk] = React.useState<Record<string, InkStroke[]>>({})
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
@@ -133,7 +136,7 @@ export function TutorApp() {
   )
 
   const run = React.useCallback(
-    async (clipId: string, req: LessonRequest) => {
+    async (clipId: string, req: LessonRequest, opts: { inChat?: boolean } = {}) => {
       requests.current.set(clipId, req)
       const ac = new AbortController()
       aborts.current.set(clipId, ac)
@@ -164,10 +167,28 @@ export function TutorApp() {
         }
       }
 
+      // A lesson started from a chat that could not be made: turn its placeholder back into a plain reply.
+      const abandon = (text: string) => {
+        setItems((xs) => xs.map((it) => ("clipId" in it && it.clipId === clipId ? { id: it.id, role: "assistant" as const, text } : it)))
+        setClips((m) => {
+          const rest = { ...m }
+          delete rest[clipId]
+          return rest
+        })
+        if (activeRef.current === clipId) {
+          activeRef.current = null
+          setActiveId(null)
+        }
+      }
+
       try {
         const result = await streamClip(req, apply, ac.signal)
         refreshStatus()
         // The model decided this wasn't a topic (greeting, small talk): no lesson, just its reply.
+        if (kind === "lesson" && result.segments.length === 0 && opts.inChat) {
+          abandon(result.reply ?? "I couldn't turn that into a lesson. Could you rephrase it?")
+          return
+        }
         if (kind === "lesson" && result.segments.length === 0) {
           aborts.current.forEach((a) => a.abort())
           player?.pause()
@@ -192,6 +213,10 @@ export function TutorApp() {
           // Free allowance used up: offer to add their own key.
           setKeyDialog({ open: true, reason: err.kind })
           refreshStatus()
+          if (kind === "lesson" && opts.inChat) {
+            abandon(message)
+            return
+          }
           if (kind === "lesson") {
             setNotice(message)
             setTopic(null)
@@ -212,17 +237,18 @@ export function TutorApp() {
     [activate, player, refreshStatus]
   )
 
-  const busy = Object.values(clips).some((c) => !c.done && !c.error)
+  const busy = chatting || Object.values(clips).some((c) => !c.done && !c.error)
 
   // Save the conversation to this browser's history once nothing is generating.
   React.useEffect(() => {
     if (!topic || !lessonId || busy) return
     const lesson = clips[lessonId]
-    if (!lesson || !lesson.segments.length) return
+    // A chat with no lesson yet is saved too, once Chalk has replied.
+    if (lesson ? !lesson.segments.length : !items.some((i) => i.role === "assistant")) return
     const existing = getSession(lessonId)
     saveSession({
       id: lessonId,
-      title: lesson.title ?? topic,
+      title: lesson?.title ?? sessionTitle(topic),
       topic,
       level,
       createdAt: existing?.createdAt ?? Date.now(),
@@ -246,6 +272,8 @@ export function TutorApp() {
     setLessonId(null)
     setActiveId(null)
     activeRef.current = null
+    activeSessionRef.current = null
+    setChatting(false)
   }, [player])
 
   /** Back to the home screen (and "/"). */
@@ -268,6 +296,7 @@ export function TutorApp() {
     }
     resetState()
     const id = newId("lesson")
+    activeSessionRef.current = id
     setUrl(lessonPath(id))
     setTopic(t)
     setLessonId(id)
@@ -301,7 +330,8 @@ export function TutorApp() {
     setItems(saved.items)
     setClips(restored)
     setLessonId(saved.lessonId)
-    activate(saved.lessonId, restored[saved.lessonId], false)
+    activeSessionRef.current = saved.lessonId
+    if (restored[saved.lessonId]) activate(saved.lessonId, restored[saved.lessonId], false)
   }
 
   // Keep the page in step with the address bar: open the lesson in the URL on
@@ -324,6 +354,57 @@ export function TutorApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player])
 
+  /** One round of conversation: Chalk answers, or decides to make a lesson (the create_lesson tool). */
+  const chatTurn = async (sessionId: string, message: string, history: { role: "user" | "assistant"; text: string }[]) => {
+    setChatting(true)
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...keyHeaders() },
+        body: JSON.stringify({ message, level, history: history.slice(-10) }),
+      })
+      const data = (await res.json().catch(() => null)) as { reply?: string; lessonTopic?: string; error?: string; code?: string } | null
+      if (res.status === 402) setKeyDialog({ open: true, reason: "quota" })
+      if (!res.ok || !data?.reply) throw new Error(data?.error ?? "Chalk couldn't reply just now. Please try again.")
+      if (activeSessionRef.current !== sessionId) return // the learner moved on
+      setItems((xs) => [...xs, { id: newId("a"), role: "assistant", text: data.reply! }])
+      if (data.lessonTopic) {
+        const t = data.lessonTopic
+        setTopic(t)
+        setItems((xs) => [...xs, { id: newId("a"), role: "assistant", clipId: sessionId }])
+        void run(sessionId, { mode: "lesson", topic: t, level }, { inChat: true })
+      }
+    } catch (e) {
+      if (activeSessionRef.current === sessionId) setItems((xs) => [...xs, { id: newId("a"), role: "assistant", text: (e as Error).message }])
+    } finally {
+      setChatting(false)
+    }
+  }
+
+  /** From the home screen: open a chat page and talk to Chalk there. */
+  const startChat = (raw: string) => {
+    const message = raw.trim()
+    if (!message) return
+    resetState()
+    const id = newId("lesson")
+    activeSessionRef.current = id
+    setUrl(lessonPath(id))
+    setTopic(message)
+    setLessonId(id)
+    setItems([{ id: newId("u"), role: "user", text: message }])
+    void chatTurn(id, message, [])
+  }
+
+  /** Follow-up message in a chat that has no lesson yet. */
+  const continueChat = (raw: string) => {
+    const message = raw.trim()
+    if (!message || !lessonId || busy) return
+    const history = items.map((it) => ({ role: it.role, text: it.role === "user" ? it.text : "text" in it ? it.text : (clipsRef.current[it.clipId]?.reply ?? "") })).filter((m) => m.text)
+    setItems((xs) => [...xs, { id: newId("u"), role: "user", text: message }])
+    setInput("")
+    void chatTurn(lessonId, message, history)
+  }
+
   const ask = (raw: string, attachments?: Attachment[]) => {
     const q = raw.trim() || (attachments?.length ? "Can you explain what I attached?" : "")
     if (q.length < 2 || !topic || busy) return
@@ -334,7 +415,7 @@ export function TutorApp() {
       .map((it) =>
         it.role === "user"
           ? { role: "user" as const, text: it.text }
-          : { role: "assistant" as const, text: clipsRef.current[it.clipId]?.reply ?? "" }
+          : { role: "assistant" as const, text: "text" in it ? it.text : (clipsRef.current[it.clipId]?.reply ?? "") }
       )
       .filter((m) => m.text)
     const id = newId("followup")
@@ -384,6 +465,7 @@ export function TutorApp() {
   const activeClip = activeId ? clips[activeId] : undefined
   const lessonTitle = lessonId ? clips[lessonId]?.title ?? topic : null
   const inLesson = !!topic && !!snap
+  const showBoard = inLesson && !!lessonId && !!clips[lessonId]
   // The finished lesson itself (not a follow-up) is what gets exported as a video.
   const exportClip = lessonId && videoExportSupported() ? clips[lessonId] : undefined
   const cancelExport = videoExport.cancel
@@ -417,20 +499,20 @@ export function TutorApp() {
               the whiteboard preview starts. */}
           <div
             className={
-              inLesson
+              showBoard
                 ? "flex min-w-0 items-center gap-2 pr-1 md:pr-3 lg:w-[380px] lg:shrink-0 lg:pr-3 xl:w-[420px]"
                 : "flex items-center"
             }
           >
             <SidebarTrigger className="-ml-1 shrink-0 text-muted-foreground" />
-            {inLesson && (
+            {showBoard && (
               <>
                 <Separator orientation="vertical" className="mx-1 hidden h-4 shrink-0 self-center md:block" />
                 <h1 className="hidden min-w-0 truncate text-sm font-medium md:block">{lessonTitle}</h1>
               </>
             )}
           </div>
-          {inLesson && snap && (
+          {showBoard && snap && (
             // On wide screens this is a tab fused to the top-left of the preview panel.
             <div className="relative min-w-0 flex-1 lg:h-10 lg:self-end lg:rounded-t-2xl lg:bg-[var(--board-panel)] lg:px-2 lg:after:absolute lg:after:bottom-0 lg:after:-right-3 lg:after:size-3 lg:after:[background:radial-gradient(circle_at_100%_0,transparent_0.75rem,var(--board-panel)_0.75rem)] lg:flex lg:flex-none lg:items-center">
               <ChapterPicker snap={snap} onSelect={(i) => activeId && goToChapter(activeId, i)} />
@@ -449,7 +531,28 @@ export function TutorApp() {
         </header>
 
         {!inLesson ? (
-          <EmptyState level={level} setLevel={setLevel} onStart={startLesson} notice={notice} onClearNotice={() => setNotice(null)} />
+          <EmptyState level={level} setLevel={setLevel} onStart={startLesson} onChat={startChat} notice={notice} onClearNotice={() => setNotice(null)} />
+        ) : !showBoard ? (
+          <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
+            <ChatPanel
+              items={items}
+              clips={clips}
+              activeClipId={activeId}
+              snap={snap}
+              input={input}
+              setInput={setInput}
+              onSend={(text) => continueChat(text)}
+              onPlayClip={playClip}
+              onChapter={goToChapter}
+              onRetry={retry}
+              onStop={stop}
+              level={level}
+              busy={busy}
+              textareaRef={textareaRef}
+              chatOnly
+              typing={chatting}
+            />
+          </main>
         ) : (
           <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
             {/* Whiteboard preview */}
@@ -484,6 +587,7 @@ export function TutorApp() {
                 level={level}
                 busy={busy}
                 textareaRef={textareaRef}
+                typing={chatting}
               />
             </aside>
           </main>
