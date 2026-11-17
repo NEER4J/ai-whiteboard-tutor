@@ -160,6 +160,17 @@ function Step({ state, children, detail }: { state: "done" | "active" | "todo"; 
 }
 
 /** Shows what the tutor is doing right now, step by step, until the clip is complete. */
+/** Whole seconds since mount, while `on` is true. */
+function useElapsed(on: boolean) {
+  const [s, setS] = React.useState(0)
+  React.useEffect(() => {
+    if (!on) return
+    const t = setInterval(() => setS((n) => n + 1), 1000)
+    return () => clearInterval(t)
+  }, [on])
+  return s
+}
+
 function CreatingCard({ clip }: { clip: ClipState }) {
   const isLesson = clip.kind === "lesson"
   const segs = clip.segments.length
@@ -168,6 +179,7 @@ function CreatingCard({ clip }: { clip: ClipState }) {
   const planned = !!(clip.title || clip.reply || segs)
   const expected = isLesson ? 9 : 3
   const value = Math.min(94, planned ? 12 + (segs / expected) * 82 : 6)
+  const thinkingFor = useElapsed(!planned)
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl bg-muted/60 p-3.5 dark:bg-muted/40">
@@ -177,8 +189,18 @@ function CreatingCard({ clip }: { clip: ClipState }) {
       </div>
       <Progress value={value} className="gap-0 [&_[data-slot=progress-track]]:h-1.5 [&_[data-slot=progress-indicator]]:duration-500" />
       <ol className="flex flex-col gap-2.5">
-        <Step state={planned ? "done" : "active"} detail={!planned ? "Choosing the key ideas and an order to teach them" : undefined}>
-          {isLesson ? "Planning the lesson" : "Understanding your question"}
+        <Step
+          state={planned ? "done" : "active"}
+          detail={
+            !planned ? (
+              <span className="inline-flex items-center gap-1.5">
+                The AI is thinking: picking the key ideas and the best order to teach them
+                <span className="tabular-nums">· {thinkingFor}s</span>
+              </span>
+            ) : undefined
+          }
+        >
+          {planned ? (isLesson ? "Planned the lesson" : "Understood your question") : "Thinking it through…"}
         </Step>
         <Step
           state={!planned ? "todo" : "active"}

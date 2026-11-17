@@ -22,6 +22,8 @@ import { ChatPanel } from "./chat-panel"
 import { EmptyState } from "./empty-state"
 import { HeaderActions } from "./header-actions"
 import { KeyDialog } from "./key-dialog"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { ChatItem, ClipState } from "./types"
 
 
@@ -71,6 +73,7 @@ export function TutorApp() {
   const [lessonId, setLessonId] = React.useState<string | null>(null)
   const [input, setInput] = React.useState("")
   const [chatting, setChatting] = React.useState(false)
+  const [dupe, setDupe] = React.useState<{ id: string; title: string; topic: string } | null>(null)
   const activeSessionRef = React.useRef<string | null>(null)
   const [notice, setNotice] = React.useState<string | null>(null)
   const [ink, setInk] = React.useState<Record<string, InkStroke[]>>({})
@@ -282,15 +285,15 @@ export function TutorApp() {
     setUrl("/")
   }, [resetState])
 
-  const startLesson = (raw: string, attachments?: Attachment[]) => {
+  const startLesson = (raw: string, attachments?: Attachment[], force = false) => {
     const t = raw.trim()
     if (t.length < 2) return
     // Already have this lesson? Replay it instead of asking the AI (and spending a prompt) again.
-    if (!attachments?.length) {
+    if (!attachments?.length && !force) {
       const existing = findSessionByTopic(t, level)
       if (existing) {
-        toast("You already have this lesson, so I reopened it instead of generating it again.")
-        openSession(existing.id)
+        // Don't decide for them: let the learner open the saved lesson or make a fresh one.
+        setDupe({ id: existing.id, title: existing.title, topic: t })
         return
       }
     }
@@ -593,6 +596,37 @@ export function TutorApp() {
           </main>
         )}
       </SidebarInset>
+      <Dialog open={!!dupe} onOpenChange={(o) => !o && setDupe(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>You already have this lesson</DialogTitle>
+            <DialogDescription>
+              “{dupe?.title}” is saved in this browser. Opening it is instant and free. Creating a new one makes a fresh lesson and uses one of your prompts.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const d = dupe
+                setDupe(null)
+                if (d) startLesson(d.topic, undefined, true)
+              }}
+            >
+              Create a new one
+            </Button>
+            <Button
+              onClick={() => {
+                const d = dupe
+                setDupe(null)
+                if (d) openSession(d.id)
+              }}
+            >
+              Open the saved lesson
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <KeyDialog
         open={keyDialog.open}
         onOpenChange={(open) => setKeyDialog((d) => ({ ...d, open }))}

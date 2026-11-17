@@ -1,7 +1,7 @@
 import "server-only"
 
 /** Text model used for lessons and follow-ups (any Vercel AI Gateway model id). */
-export const LESSON_MODEL = process.env.LESSON_MODEL || "openai/gpt-6.1-terra"
+export const LESSON_MODEL = process.env.LESSON_MODEL || "openai/gpt-6-luna"
 /**
  * Gateway provider to route the lesson model through (the gateway's "only" option). Defaults to
  * the model's own maker; set LESSON_PROVIDER to another gateway provider slug, or "any" for no pin.
@@ -9,13 +9,12 @@ export const LESSON_MODEL = process.env.LESSON_MODEL || "openai/gpt-6.1-terra"
 const provider = process.env.LESSON_PROVIDER || (LESSON_MODEL.split("/")[0] ?? "")
 export const LESSON_PROVIDERS: string[] | undefined = provider === "any" || !provider ? undefined : [provider]
 /**
- * Reasoning effort for the lesson model. "none" turns thinking off so lessons
- * start streaming as fast as possible (the lesson format is structured and the
- * prompt already carries the layout rules).
+ * Reasoning effort for the lesson model. "medium" gives steadier, fuller lessons; "none" turns thinking off
+ * so they start streaming sooner (about 10s faster).
  */
 const EFFORTS = ["none", "minimal", "low", "medium", "high"] as const
 const effort = process.env.LESSON_REASONING as (typeof EFFORTS)[number] | undefined
-export const LESSON_REASONING: (typeof EFFORTS)[number] = effort && EFFORTS.includes(effort) ? effort : "none"
+export const LESSON_REASONING: (typeof EFFORTS)[number] = effort && EFFORTS.includes(effort) ? effort : "medium"
 /**
  * Speech model used for narration (any Vercel AI Gateway speech model id).
  * Default: Gemini 3.8 Flash-Lite TTS, roughly 35% cheaper per lesson than
