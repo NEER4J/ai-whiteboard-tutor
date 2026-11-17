@@ -90,11 +90,11 @@ export function EmptyState({ level, setLevel, onStart }: Props) {
     <div className="relative flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 pb-10">
       <BoardDoodles />
       <div className="relative my-auto flex w-full max-w-3xl flex-col gap-9 py-8">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.7rem]">
+        <div className="flex flex-col items-start gap-3 text-left">
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
             {hello} <span aria-hidden>👋</span>
           </h1>
-          <p className="max-w-md text-sm text-balance text-muted-foreground">
+          <p className="max-w-lg text-base text-pretty text-muted-foreground">
             Type any topic, or attach your notes, and get a two-minute lesson drawn on a whiteboard.
           </p>
         </div>
