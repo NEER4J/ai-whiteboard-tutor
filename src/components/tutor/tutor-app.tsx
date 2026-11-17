@@ -12,6 +12,7 @@ import { streamClip, type ClipUpdate } from "@/lib/stream-clip"
 import { describe, type InkStroke } from "@/components/whiteboard/whiteboard"
 import { AppSidebar } from "./app-sidebar"
 import { BoardStage } from "./board-stage"
+import { ChapterPicker } from "./chapter-picker"
 import { ChatPanel } from "./chat-panel"
 import { EmptyState } from "./empty-state"
 import { HeaderActions } from "./header-actions"
@@ -341,7 +342,9 @@ export function TutorApp() {
           {inLesson && (
             <>
               <Separator orientation="vertical" className="mx-1 h-4" />
-              <h1 className="truncate text-sm font-medium">{lessonTitle}</h1>
+              <h1 className="hidden min-w-0 truncate text-sm font-medium md:block">{lessonTitle}</h1>
+              <Separator orientation="vertical" className="mx-1 hidden h-4 md:block" />
+              {snap && <ChapterPicker snap={snap} onSelect={(i) => activeId && goToChapter(activeId, i)} />}
             </>
           )}
           <HeaderActions
@@ -388,6 +391,7 @@ export function TutorApp() {
                 onChapter={goToChapter}
                 onRetry={retry}
                 onStop={stop}
+                level={level}
                 busy={busy}
                 textareaRef={textareaRef}
               />

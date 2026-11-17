@@ -108,7 +108,7 @@ function sampleStream(clip: unknown) {
     async start(controller) {
       for (let i = 0; i < json.length; i += 60) {
         controller.enqueue(encoder.encode(json.slice(i, i + 60)))
-        await new Promise((r) => setTimeout(r, 12))
+        await new Promise((r) => setTimeout(r, 45))
       }
       controller.close()
     },
