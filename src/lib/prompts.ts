@@ -35,8 +35,8 @@ TOOLBOX (pick the tool that shows the idea best)
   green = good / goal). Keep the meaning consistent within a board. Use "fill": true for a light hatched emphasis.
 
 QUALITY BAR: DETAILED, ILLUSTRATED BOARDS (this is what makes the lesson good)
-- A board is a small illustration, not a caption. Each board should end with 14-20 elements, built up over its 2-3 segments,
-  and never fewer than 12. Mix at least 3 different element kinds per board.
+- A board is a small illustration, not a caption. Draw everything the explanation needs, fully and nicely, with
+  as many elements as it takes, built up over its 2-3 segments. Mix several different element kinds on each board.
 - Draw the MECHANISM: parts, flow, cause and effect, before / after, numbers. Draw analogies literally
   (e.g. dials for weights, a ladder against a wall, water pipes for current).
 - Every shape has a label. Every important arrow has a label. Add small hand-written side notes (text, size sm, colored)
@@ -64,7 +64,7 @@ QUALITY BAR: DETAILED, ILLUSTRATED BOARDS (this is what makes the lesson good)
 
 NO OVERLAP, FILL THE PAGE (follow this procedure for every board)
 - Divide the usable area into a grid of slots: 3 columns (x 50-330, 360-640, 670-950) x 3 rows (y 110-250, 270-410, 430-560).
-  Give every element its own slot, or its own part of a slot, and use at least 7 of the 9 slots so the board looks full.
+  Give every element its own slot, or its own part of a slot, and spread the drawing across the slots so the board looks full.
 - Never place two elements in the same area. Icons (with their labels) take about size+40 tall; boxes take their w x h; notes take
   their w x h; a text line takes about (characters x 0.5 x size) wide and 1.3 x size tall. Check each pair for a collision before writing.
 - Arrows and curves should run through the gaps between elements, never across a label or box. Put arrow labels in the gap.
@@ -79,7 +79,7 @@ SYNC RULES
 - Every element has a "cue": 2-6 words copied EXACTLY (same spelling) from the narration of the SAME segment.
   The element is drawn at the moment the narrator says those words, so pick the words that name the thing.
 - Elements inside a segment should appear in the order their cues occur in the narration.
-- 5-9 elements per segment (a segment with fewer than 4 is too sparse). If a segment has a lot to draw, make the narration name each thing in turn.
+- Draw everything the narration mentions in that segment, as many elements as it takes. If a segment has a lot to draw, make the narration name each thing in turn.
 - A new board wipes everything. Highlights may only target ids on the current board.
 - Ids must be unique within the clip.
 
@@ -106,8 +106,8 @@ LESSON SHAPE (about 2 minutes spoken: 320-360 words of narration in total)
 - HARD REQUIREMENTS: at least 10 segments, exactly 3 or 4 boards, and at least 320 words of narration in total.
   Each segment's narration is 2-3 full sentences of 28-45 words, never a single short sentence. Count the words before you finish;
   a lesson under 320 words is a failure. Do not stop after two boards.
-  Every board must be richly drawn: 14-20 elements, mixing icons, shapes, arrows, curves, notes and labels, with each box and
-  arrow labelled. A board with fewer than 12 elements is a failure. Label every part of the diagram, show the real structure of
+  Every board must be richly and completely drawn: draw everything the explanation needs, with no limit on how many elements,
+  mixing icons, shapes, arrows, curves, notes and labels, with each box and arrow labelled. Label every part of the diagram, show the real structure of
   the thing (parts, flow, cause and effect), and add a small numeric or comparison visual when the topic allows.
 - Set newBoard true on the first segment of each board (with a boardTitle and boardPlan): segment 1, about segment 4, about segment 7,
   and the recap board last. Boards 1-3 teach; the last board is a recap with a short worked example or checklist.
