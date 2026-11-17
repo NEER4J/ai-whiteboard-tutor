@@ -157,13 +157,8 @@ export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="gap-1 px-3 pb-3">
-        {status && (
-          <div className="flex items-center gap-2 px-1 pb-1 text-xs text-muted-foreground">
-            <span className={status.mode === "live" ? "size-1.5 rounded-full bg-emerald-500" : "size-1.5 rounded-full bg-amber-500"} />
-            {status.mode === "live" ? `Live AI · ${status.model?.split("/")[1] ?? ""}` : "Sample mode (no AI key)"}
-          </div>
-        )}
+      <SidebarFooter className="gap-2 px-3 pb-3">
+        {/* Settings first, then a compact info card */}
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -201,7 +196,16 @@ export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
-        <p className="px-1 text-[11px] leading-snug text-muted-foreground/80">Lessons are saved only in this browser.</p>
+        <div className="rounded-xl bg-sidebar-accent/60 px-3 py-2.5">
+          <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+            <span className={status?.mode === "live" ? "size-1.5 rounded-full bg-emerald-500" : "size-1.5 rounded-full bg-amber-500"} />
+            {!status ? "Checking…" : status.mode === "live" ? `Live AI · ${status.model?.split("/")[1] ?? ""}` : "Sample mode"}
+          </div>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+            {status?.mode === "sample" ? "No AI key is set, so lessons are pre-written. " : ""}
+            Your lessons are saved only in this browser.
+          </p>
+        </div>
       </SidebarFooter>
     </Sidebar>
   )
