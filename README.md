@@ -235,7 +235,7 @@ A two-minute lesson is roughly 1,800 characters of narration. Approximate list p
 | Narration (default) | `google/gemini-3.8-flash-lite-tts` | about $0.017 |
 | Narration (alternative) | `fish-audio/drama-3` | about $0.018 |
 | Narration (previous default) | `openai/tts-1` | about $0.027 |
-| Lesson text | `openai/gpt-6.1-terra`, thinking off | well under $0.01 |
+| Lesson text | `openai/gpt-6.1-terra`, thinking off | about $0.03–0.06 |
 
 Narration is requested once per segment and cached for the tab, so replaying, seeking and restarting cost nothing extra; reopening a saved lesson later re-requests the audio.
 
