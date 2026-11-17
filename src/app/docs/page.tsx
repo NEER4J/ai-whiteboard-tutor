@@ -36,14 +36,14 @@ const SHORTCUTS: [string, string][] = [
 const STACK: [string, string][] = [
   ["Framework", "Next.js 16 (App Router), React 19, TypeScript"],
   ["UI", "shadcn/ui on Base UI, Tailwind CSS v4, AI Elements chat components"],
-  ["AI", "Vercel AI SDK + AI Gateway: Claude Haiku 5.5 (medium thinking) for lessons, Gemini 3.8 Flash-Lite TTS for voice"],
+  ["AI", "Vercel AI SDK + AI Gateway: GPT-6 Luna (medium thinking) for lessons, Gemini 3.8 Flash-Lite TTS for voice"],
   ["Whiteboard", "SVG + rough.js for the hand-drawn look, animated by stroke-dashoffset"],
   ["Storage", "Your browser's localStorage (lesson history, optional API key). No accounts, no database"],
 ]
 
 const ENV: [string, string][] = [
   ["AI_GATEWAY_API_KEY", "Your Vercel AI Gateway key. Without it the app runs in sample mode."],
-  ["LESSON_MODEL / LESSON_REASONING", "Lesson model id (default claude-haiku-5.5) and thinking effort (default medium)."],
+  ["LESSON_MODEL / LESSON_REASONING", "Lesson model id (default gpt-6-luna) and thinking effort (default medium)."],
   ["TTS_MODEL / TTS_VOICE", "Speech model and voice for narration."],
   ["FREE_PROMPTS / FREE_PER_IP_DAY", "Free prompts per visitor and per network each day, lessons and follow-ups together (default 10 each)."],
   ["USAGE_SECRET", "Signs the usage cookie. Set a long random string in production."],
