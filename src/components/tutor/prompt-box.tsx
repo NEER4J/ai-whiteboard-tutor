@@ -40,7 +40,7 @@ export function PromptBox({ value, onChange, onSubmit, placeholder, busy, onStop
       <InputGroup
         className={cn(
           // The send button is disabled while empty; don't let that fade the whole box.
-          "rounded-2xl border-transparent bg-muted/70 has-disabled:bg-muted/70 has-disabled:opacity-100 dark:bg-muted/50 dark:has-disabled:bg-muted/50",
+          "rounded-2xl border-transparent bg-muted/70 shadow-[0_2px_8px_-3px_rgb(0_0_0/0.12)] has-disabled:bg-muted/70 has-disabled:opacity-100 dark:bg-muted/50 dark:has-disabled:bg-muted/50",
           size === "lg" && "rounded-3xl border-border/80 bg-card has-disabled:bg-card dark:has-disabled:bg-card/70 shadow-[0_2px_10px_-4px_rgb(0_0_0/0.08)] dark:bg-card/70"
         )}
       >
