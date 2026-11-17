@@ -344,21 +344,21 @@ export function TutorApp() {
           <div
             className={
               inLesson
-                ? "flex min-w-0 items-center gap-2 pr-3 lg:w-[380px] lg:shrink-0 lg:pr-3 xl:w-[420px]"
+                ? "flex min-w-0 items-center gap-2 pr-1 md:pr-3 lg:w-[380px] lg:shrink-0 lg:pr-3 xl:w-[420px]"
                 : "flex items-center"
             }
           >
             <SidebarTrigger className="-ml-1 shrink-0 text-muted-foreground" />
             {inLesson && (
               <>
-                <Separator orientation="vertical" className="mx-1 h-4 shrink-0" />
-                <h1 className="min-w-0 truncate text-sm font-medium">{lessonTitle}</h1>
+                <Separator orientation="vertical" className="mx-1 hidden h-4 shrink-0 md:block" />
+                <h1 className="hidden min-w-0 truncate text-sm font-medium md:block">{lessonTitle}</h1>
               </>
             )}
           </div>
           {inLesson && snap && (
             // On wide screens this is a tab fused to the top-left of the preview panel.
-            <div className="relative lg:h-10 lg:self-end lg:rounded-t-2xl lg:bg-[var(--board-panel)] lg:px-2 lg:after:absolute lg:after:bottom-0 lg:after:-right-3 lg:after:size-3 lg:after:[background:radial-gradient(circle_at_100%_0,transparent_0.75rem,var(--board-panel)_0.75rem)] lg:flex lg:items-center">
+            <div className="relative min-w-0 flex-1 lg:h-10 lg:self-end lg:rounded-t-2xl lg:bg-[var(--board-panel)] lg:px-2 lg:after:absolute lg:after:bottom-0 lg:after:-right-3 lg:after:size-3 lg:after:[background:radial-gradient(circle_at_100%_0,transparent_0.75rem,var(--board-panel)_0.75rem)] lg:flex lg:flex-none lg:items-center">
               <ChapterPicker snap={snap} onSelect={(i) => activeId && goToChapter(activeId, i)} />
             </div>
           )}
@@ -378,7 +378,7 @@ export function TutorApp() {
         ) : (
           <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
             {/* Whiteboard preview */}
-            <div ref={boardPanel} className="mx-3 mb-3 flex min-h-0 flex-[3] flex-col rounded-2xl bg-[var(--board-panel)] p-3 lg:order-2 lg:m-3 lg:mt-0 lg:min-w-0 lg:flex-1 lg:rounded-tl-none lg:p-5 fullscreen:m-0 fullscreen:rounded-none fullscreen:bg-background fullscreen:p-6">
+            <div ref={boardPanel} className="mx-3 mb-3 flex min-h-0 flex-none flex-col lg:flex-1 rounded-2xl bg-[var(--board-panel)] p-2.5 lg:order-2 lg:m-3 lg:mt-0 lg:min-w-0 lg:flex-1 lg:rounded-tl-none lg:p-5 fullscreen:m-0 fullscreen:rounded-none fullscreen:bg-background fullscreen:p-6">
               <BoardStage
                 player={player}
                 snap={snap}
@@ -393,7 +393,7 @@ export function TutorApp() {
               />
             </div>
             {/* Chat */}
-            <aside className="flex min-h-0 flex-[2] flex-col lg:order-1 lg:w-[380px] lg:flex-none xl:w-[420px]">
+            <aside className="flex min-h-0 flex-1 flex-col lg:order-1 lg:w-[380px] lg:flex-none xl:w-[420px]">
               <ChatPanel
                 items={items}
                 clips={clips}
