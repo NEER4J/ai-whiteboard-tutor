@@ -8,7 +8,7 @@ import {
 } from "@/lib/prompts"
 import { LESSON_MODEL, LESSON_REASONING, clientIp, isLive } from "@/lib/server/config"
 import { userGateway } from "@/lib/server/gateway"
-import { FREE_FOLLOWUPS, FREE_LESSONS, isSecure, readUsage, usageCookie } from "@/lib/server/quota"
+import { FREE_PROMPTS, isSecure, promptsUsed, readUsage, usageCookie } from "@/lib/server/quota"
 import { rateLimit } from "@/lib/server/rate-limit"
 import { SAMPLE_FOLLOWUP, SAMPLE_LESSON } from "@/lib/server/sample"
 
@@ -47,20 +47,13 @@ export async function POST(req: Request) {
       )
     }
     const usage = readUsage(req)
-    const key = isLesson ? "lessons" : "followups"
-    const limit = isLesson ? FREE_LESSONS : FREE_FOLLOWUPS
-    if (usage[key] >= limit) {
+    if (promptsUsed(usage) >= FREE_PROMPTS) {
       return Response.json(
-        {
-          error: isLesson
-            ? `You've used your ${FREE_LESSONS} free lessons. Add your own AI Gateway key to keep learning.`
-            : `You've used your ${FREE_FOLLOWUPS} free follow-up questions. Add your own AI Gateway key to keep going.`,
-          code: "quota_exceeded",
-        },
+        { error: `You've used all ${FREE_PROMPTS} free prompts. Add your own AI Gateway key to keep learning.`, code: "quota_exceeded" },
         { status: 402 }
       )
     }
-    usage[key] += 1
+    usage[isLesson ? "lessons" : "followups"] += 1
     setCookie = usageCookie(usage, isSecure(req))
   }
 

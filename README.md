@@ -186,8 +186,7 @@ playback can be tried with no credentials.
 | `LESSON_REASONING` | no | `none` | Thinking effort: `none` (fastest), `minimal`, `low`, `medium`, `high` |
 | `TTS_MODEL` | no | `google/gemini-3.8-flash-lite-tts` | Speech model for narration (e.g. `openai/tts-1`, `fish-audio/drama-3`) |
 | `TTS_VOICE` | no | `Kore` | Voice name for the speech model (provider-specific; `nova` for OpenAI) |
-| `FREE_LESSONS` | no | `16` | Free lessons per visitor before they must add their own key |
-| `FREE_FOLLOWUPS` | no | `48` | Free follow-up questions per visitor |
+| `FREE_PROMPTS` | no | `16` | Free prompts per visitor (lessons, follow-ups, quiz answers and hints all count) before they must add their own key |
 | `USAGE_SECRET` | recommended in production | any long random string | Signs the usage cookie (falls back to the gateway key) |
 | `NEXT_PUBLIC_SITE_URL` | recommended once you have a domain | `https://chalk.example.com` | Public origin for canonical, social preview and sitemap URLs (on Vercel the production URL is used automatically) |
 | `MOCK_AI` | no | `1` | Force sample mode |
@@ -221,8 +220,8 @@ Narration is requested once per segment and cached for the tab, so replaying, se
 
 The demo runs on one shared AI Gateway key, so spending is capped:
 
-- **16 free lessons per visitor** (and 48 follow-up questions). Usage is kept in a signed, HttpOnly cookie, so it can't be edited,
-  and the sidebar shows how many lessons are left. Narration audio is only served for lessons the visitor actually started.
+- **16 free prompts per visitor in total.** A new lesson, a follow-up question, a quiz answer and a hint request each cost one prompt.
+  Usage is kept in a signed, HttpOnly cookie, so it can't be edited, and the sidebar shows how many are left. Narration audio is only served for lessons the visitor actually started.
 - **Burst and daily limits per IP** (30 requests / 10 min, 48 / day) as a backstop.
 - **After the free allowance, visitors can add their own Vercel AI Gateway key** (sidebar → "Use your own key"). The key is verified
   with a one-word request, kept only in the visitor's browser (localStorage), and sent in an `x-chalk-key` header so the server can call

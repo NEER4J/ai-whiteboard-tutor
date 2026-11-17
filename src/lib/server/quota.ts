@@ -10,8 +10,8 @@ import { createHmac, timingSafeEqual } from "node:crypto"
  * in a shared database (e.g. Vercel KV / Upstash) keyed by user or IP.
  */
 
-export const FREE_LESSONS = Number(process.env.FREE_LESSONS) || 16
-export const FREE_FOLLOWUPS = Number(process.env.FREE_FOLLOWUPS) || 48
+/** One shared budget: every request to the AI (a lesson, a follow-up, a quiz answer, a hint) costs one prompt. */
+export const FREE_PROMPTS = Number(process.env.FREE_PROMPTS) || 16
 
 export type Usage = { lessons: number; followups: number; tts: number }
 
@@ -48,12 +48,11 @@ export function usageCookie(u: Usage, secure: boolean) {
 export const isSecure = (req: Request) =>
   req.headers.get("x-forwarded-proto") === "https" || new URL(req.url).protocol === "https:"
 
-/** How many narration clips a visitor may fetch: enough for what they've started, plus slack. */
-export const ttsAllowance = (u: Usage) => u.lessons * 16 + u.followups * 6 + 4
+export const promptsUsed = (u: Usage) => u.lessons + u.followups
+
+/** How many narration clips a visitor may fetch: enough for the prompts they've used, plus slack. */
+export const ttsAllowance = (u: Usage) => u.lessons * 14 + u.followups * 5 + 4
 
 export function quotaSummary(u: Usage) {
-  return {
-    lessons: { used: u.lessons, limit: FREE_LESSONS },
-    followups: { used: u.followups, limit: FREE_FOLLOWUPS },
-  }
+  return { prompts: { used: promptsUsed(u), limit: FREE_PROMPTS } }
 }

@@ -465,7 +465,7 @@ export function TutorApp() {
         open={keyDialog.open}
         onOpenChange={(open) => setKeyDialog((d) => ({ ...d, open }))}
         reason={keyDialog.reason}
-        freeLimit={status?.quota?.lessons.limit}
+        freeLimit={status?.quota?.prompts.limit}
         onSaved={refreshStatus}
       />
     </SidebarProvider>

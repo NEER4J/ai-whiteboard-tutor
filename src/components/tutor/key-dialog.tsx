@@ -76,13 +76,13 @@ export function KeyDialog({ open, onOpenChange, reason = "manual", freeLimit = 1
           <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-violet-100 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">
             <KeyRoundIcon className="size-5" />
           </div>
-          <DialogTitle>{saved ? "Your API key" : reason === "quota" ? "You've used your free lessons" : "Use your own API key"}</DialogTitle>
+          <DialogTitle>{saved ? "Your API key" : reason === "quota" ? "You've used your free prompts" : "Use your own API key"}</DialogTitle>
           <DialogDescription>
             {saved
               ? "Lessons, answers and voice are now billed to your own Vercel AI Gateway account, with no free-tier limit."
               : reason === "quota"
-                ? `Every visitor gets ${freeLimit} free lessons. To keep learning, add your own Vercel AI Gateway key. It takes a minute.`
-                : `Chalk gives every visitor ${freeLimit} free lessons. Add your own Vercel AI Gateway key to remove the limit.`}
+                ? `Every visitor gets ${freeLimit} free prompts, counting lessons, follow-up questions, quiz answers and hints. To keep learning, add your own Vercel AI Gateway key. It takes a minute.`
+                : `Chalk gives every visitor ${freeLimit} free prompts (lessons, follow-ups, quiz answers and hints all count). Add your own Vercel AI Gateway key to remove the limit.`}
           </DialogDescription>
         </DialogHeader>
 

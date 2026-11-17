@@ -45,7 +45,7 @@ const ENV: [string, string][] = [
   ["AI_GATEWAY_API_KEY", "Your Vercel AI Gateway key. Without it the app runs in sample mode."],
   ["LESSON_MODEL / LESSON_REASONING", "Lesson model id (default claude-haiku-5.5) and thinking effort (default none)."],
   ["TTS_MODEL / TTS_VOICE", "Speech model and voice for narration."],
-  ["FREE_LESSONS / FREE_FOLLOWUPS", "Free allowance per visitor (defaults 16 and 48)."],
+  ["FREE_PROMPTS", "Free prompts per visitor, lessons and follow-ups together (default 16)."],
   ["USAGE_SECRET", "Signs the usage cookie. Set a long random string in production."],
   ["NEXT_PUBLIC_SITE_URL", "Your public URL, used for social preview and sitemap links."],
 ]
@@ -157,8 +157,9 @@ export default function DocsPage() {
 
           <H2 id="limits">Free limits &amp; your own key</H2>
           <P>
-            The hosted demo runs on a shared AI Gateway key, so every visitor gets <strong className="text-foreground">16 free lessons</strong>{" "}
-            (and 48 follow-up questions). The sidebar shows how many are left. When they run out, Chalk asks you to add your own key.
+            The hosted demo runs on a shared AI Gateway key, so every visitor gets <strong className="text-foreground">16 free prompts in total</strong>.
+            Everything that asks the AI counts: a new lesson, a follow-up question, a quiz answer and a hint request. The sidebar shows how many
+            are left. When they run out, Chalk asks you to add your own key.
           </P>
           <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
             <li>Open <strong className="text-foreground">Use your own key</strong> in the sidebar and paste a Vercel AI Gateway key. Get one at <a className="text-foreground underline underline-offset-4" href="https://vercel.com/ai-gateway" target="_blank" rel="noopener noreferrer">vercel.com/ai-gateway</a>.</li>

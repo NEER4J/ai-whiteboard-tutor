@@ -9,7 +9,7 @@ import type { AppStatus } from "./app-sidebar"
 /** Sidebar card: free lessons left, or "using your own key", plus the way to add one. */
 export function UsageCard({ status, userKey, onManageKey }: { status: AppStatus; userKey: string | null; onManageKey: () => void }) {
   const quota = status?.quota
-  const left = quota ? Math.max(0, quota.lessons.limit - quota.lessons.used) : null
+  const left = quota ? Math.max(0, quota.prompts.limit - quota.prompts.used) : null
   const out = left === 0
   const dot = userKey || status?.mode === "live" ? "bg-emerald-500" : "bg-amber-500"
 
@@ -31,13 +31,13 @@ export function UsageCard({ status, userKey, onManageKey }: { status: AppStatus;
       ) : quota && left !== null ? (
         <div className="mt-2 flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-[11px] text-muted-foreground">
-            <span>{out ? "No free lessons left" : "Free lessons"}</span>
+            <span>{out ? "No free prompts left" : "Free prompts"}</span>
             <span className={cn("tabular-nums", out ? "font-medium text-destructive" : "text-foreground")}>
-              {left} of {quota.lessons.limit} left
+              {left} of {quota.prompts.limit} left
             </span>
           </div>
           <Progress
-            value={(left / quota.lessons.limit) * 100}
+            value={(left / quota.prompts.limit) * 100}
             className="gap-0 [&_[data-slot=progress-track]]:h-1 [&_[data-slot=progress-indicator]]:bg-foreground/70"
           />
         </div>
