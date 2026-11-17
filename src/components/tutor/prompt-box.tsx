@@ -62,12 +62,14 @@ export function PromptBox({
       <div
         className={
           size === "lg"
-            ? "rounded-[1.75rem] bg-foreground/[0.045] p-1.5"
+            ? "rounded-[1.75rem] bg-foreground/[0.045] p-1.5 transition-colors focus-within:bg-foreground/[0.1]"
             : undefined
         }
       >
         <InputGroup
           className={cn(
+            // No focus ring: focus just firms up the border.
+            "has-[[data-slot=input-group-control]:focus-visible]:border-foreground/30 has-[[data-slot=input-group-control]:focus-visible]:ring-0",
             // The send button is disabled while empty; don't let that fade the whole box.
             "rounded-2xl border-transparent bg-muted/70 shadow-[0_2px_8px_-3px_rgb(0_0_0/0.12)] has-disabled:bg-muted/70 has-disabled:opacity-100 dark:bg-muted/50 dark:has-disabled:bg-muted/50",
             size === "lg" &&
