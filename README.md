@@ -35,6 +35,7 @@ explaining *and drawing at the same time*, and stopping when you look confused.
 | Check understanding | "Quiz me" asks one question; your reply is graded with an explanation |
 | Point at the confusing bit | Click any drawing to pre-fill "Can you explain *X* in more detail?" |
 | Think with your hands | Pen and highlighter tools to annotate any board (per board, per clip) |
+| Come back later | A sidebar keeps your lesson history (search, reopen, delete) in this browser's localStorage, so past lessons replay without calling the AI again |
 
 ## How to explore it (reviewer guide)
 

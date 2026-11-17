@@ -3,12 +3,15 @@
 import * as React from "react"
 import { PlusIcon } from "lucide-react"
 import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Player } from "@/lib/player"
 import type { BoardElement, LessonRequest, Level } from "@/lib/schema"
+import { getSession, saveSession } from "@/lib/sessions"
 import { streamClip, type ClipUpdate } from "@/lib/stream-clip"
 import { describe, type InkStroke } from "@/components/whiteboard/whiteboard"
+import { AppSidebar } from "./app-sidebar"
 import { BoardStage } from "./board-stage"
 import { ChatPanel } from "./chat-panel"
 import { EmptyState } from "./empty-state"
@@ -37,6 +40,7 @@ export function TutorApp() {
   const { player, snap } = usePlayer()
   const [status, setStatus] = React.useState<Status | null>(null)
   const [level, setLevel] = React.useState<Level>("beginner")
+  const [captions, setCaptions] = React.useState(true)
   const [topic, setTopic] = React.useState<string | null>(null)
   const [items, setItems] = React.useState<ChatItem[]>([])
   const [clips, setClips] = React.useState<Record<string, ClipState>>({})
@@ -116,9 +120,46 @@ export function TutorApp() {
     [activate, player]
   )
 
+  const busy = Object.values(clips).some((c) => !c.done && !c.error)
+
+  // Save the conversation to this browser's history once nothing is generating.
+  React.useEffect(() => {
+    if (!topic || !lessonId || busy) return
+    const lesson = clips[lessonId]
+    if (!lesson || !lesson.segments.length) return
+    const existing = getSession(lessonId)
+    saveSession({
+      id: lessonId,
+      title: lesson.title ?? topic,
+      topic,
+      level,
+      createdAt: existing?.createdAt ?? Date.now(),
+      updatedAt: Date.now(),
+      lessonId,
+      items,
+      clips,
+    })
+  }, [topic, lessonId, busy, clips, items, level])
+
+  const stop = () => aborts.current.forEach((ac) => ac.abort())
+
+  const reset = React.useCallback(() => {
+    aborts.current.forEach((ac) => ac.abort())
+    player?.pause()
+    setTopic(null)
+    setItems([])
+    setClips({})
+    setInk({})
+    setInput("")
+    setLessonId(null)
+    setActiveId(null)
+    activeRef.current = null
+  }, [player])
+
   const startLesson = (raw: string) => {
     const t = raw.trim()
     if (t.length < 2) return
+    reset()
     const id = newId("lesson")
     setTopic(t)
     setLessonId(id)
@@ -129,7 +170,21 @@ export function TutorApp() {
     run(id, { mode: "lesson", topic: t, level })
   }
 
-  const busy = Object.values(clips).some((c) => !c.done && !c.error)
+  const openSession = (id: string) => {
+    if (id === lessonId) return
+    const saved = getSession(id)
+    if (!saved) return
+    reset()
+    const restored: Record<string, ClipState> = {}
+    for (const [cid, c] of Object.entries(saved.clips)) restored[cid] = { ...c, done: true }
+    clipsRef.current = restored
+    setTopic(saved.topic)
+    setLevel(saved.level)
+    setItems(saved.items)
+    setClips(restored)
+    setLessonId(saved.lessonId)
+    activate(saved.lessonId, restored[saved.lessonId], false)
+  }
 
   const ask = (raw: string) => {
     const q = raw.trim()
@@ -163,20 +218,6 @@ export function TutorApp() {
     if (req) run(clipId, req)
   }
 
-  const stop = () => aborts.current.forEach((ac) => ac.abort())
-
-  const reset = () => {
-    stop()
-    player.pause()
-    setTopic(null)
-    setItems([])
-    setClips({})
-    setInk({})
-    setLessonId(null)
-    setActiveId(null)
-    activeRef.current = null
-  }
-
   const explain = (el: BoardElement) => {
     setInput(`Can you explain "${describe(el)}" in more detail?`)
     requestAnimationFrame(() => textareaRef.current?.focus())
@@ -198,77 +239,66 @@ export function TutorApp() {
   }
 
   const activeClip = activeId ? clips[activeId] : undefined
+  const lessonTitle = lessonId ? clips[lessonId]?.title ?? topic : null
+  const inLesson = !!topic && !!snap
 
   return (
-    <div className="flex h-dvh flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-3 px-4">
-        <button type="button" onClick={reset} className="flex items-center gap-2 font-semibold tracking-tight" aria-label="Chalk home">
-          <Logo />
-          Chalk
-        </button>
-        {status && (
-          <Badge variant="secondary" className="font-normal text-muted-foreground" title={status.model ?? undefined}>
-            <span className={status.mode === "live" ? "size-1.5 rounded-full bg-emerald-500" : "size-1.5 rounded-full bg-amber-500"} />
-            {status.mode === "live" ? `Live · ${status.model?.split("/")[1] ?? "AI"}` : "Sample mode"}
-          </Badge>
-        )}
-        {topic && (
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={reset}>
-            <PlusIcon data-icon="inline-start" /> New lesson
-          </Button>
-        )}
-      </header>
+    <SidebarProvider defaultOpen className="h-dvh min-h-0">
+      <AppSidebar activeId={lessonId} status={status} onNew={reset} onOpen={openSession} />
+      <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
+        <header className="flex h-12 shrink-0 items-center gap-2 px-3">
+          <SidebarTrigger className="-ml-1 text-muted-foreground" />
+          {inLesson && (
+            <>
+              <Separator orientation="vertical" className="mx-1 h-4" />
+              <h1 className="truncate text-sm font-medium">{lessonTitle}</h1>
+              <Button variant="ghost" size="sm" className="ml-auto" onClick={reset}>
+                <PlusIcon data-icon="inline-start" /> New lesson
+              </Button>
+            </>
+          )}
+        </header>
 
-      {!topic || !snap ? (
-        <EmptyState level={level} setLevel={setLevel} onStart={startLesson} mode={status?.mode ?? null} />
-      ) : (
-        <main className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row lg:gap-0">
-          <div className="flex h-[calc((100vw-1.5rem)*0.6+14rem)] max-h-[70dvh] shrink-0 flex-col px-3 pb-3 sm:h-[60dvh] lg:order-2 lg:h-auto lg:min-w-0 lg:flex-1 lg:px-6 lg:pb-5">
-            <BoardStage
-              player={player}
-              snap={snap}
-              clip={activeClip}
-              isFollowup={activeClip?.kind === "followup"}
-              onBackToLesson={() => lessonId && clips[lessonId] && activate(lessonId, clips[lessonId], true)}
-              onExplain={explain}
-              ink={ink}
-              setInk={setInk}
-            />
-          </div>
-          <aside className="flex min-h-0 flex-1 flex-col lg:order-1 lg:w-[380px] lg:flex-none xl:w-[420px]">
-            <ChatPanel
-              items={items}
-              clips={clips}
-              activeClipId={activeId}
-              snap={snap}
-              input={input}
-              setInput={setInput}
-              onSend={ask}
-              onPlayClip={playClip}
-              onChapter={goToChapter}
-              onRetry={retry}
-              onStop={stop}
-              busy={busy}
-              textareaRef={textareaRef}
-            />
-          </aside>
-        </main>
-      )}
-    </div>
-  )
-}
-
-function Logo() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-      <rect width="24" height="24" rx="7" className="fill-primary" />
-      <path
-        d="M6.5 15.5c2-4.5 4-6.5 5.5-6.5s1 3-0.5 5 1 2.5 2.5 1 2.5-3 3.5-3.5"
-        fill="none"
-        strokeWidth="2"
-        strokeLinecap="round"
-        className="stroke-primary-foreground"
-      />
-    </svg>
+        {!inLesson ? (
+          <EmptyState level={level} setLevel={setLevel} captions={captions} setCaptions={setCaptions} onStart={startLesson} mode={status?.mode ?? null} />
+        ) : (
+          <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
+            {/* Whiteboard preview */}
+            <div className="flex h-[calc((100vw-1.5rem)*0.6+14rem)] max-h-[70dvh] shrink-0 flex-col rounded-2xl bg-muted/60 p-3 sm:h-[60dvh] lg:order-2 lg:m-3 lg:mt-0 lg:h-auto lg:min-w-0 lg:flex-1 lg:p-5 dark:bg-muted/30 max-lg:mx-3">
+              <BoardStage
+                player={player}
+                snap={snap}
+                clip={activeClip}
+                isFollowup={activeClip?.kind === "followup"}
+                onBackToLesson={() => lessonId && clips[lessonId] && activate(lessonId, clips[lessonId], true)}
+                onExplain={explain}
+                ink={ink}
+                setInk={setInk}
+                captions={captions}
+                setCaptions={setCaptions}
+              />
+            </div>
+            {/* Chat */}
+            <aside className="flex min-h-0 flex-1 flex-col lg:order-1 lg:w-[380px] lg:flex-none xl:w-[420px]">
+              <ChatPanel
+                items={items}
+                clips={clips}
+                activeClipId={activeId}
+                snap={snap}
+                input={input}
+                setInput={setInput}
+                onSend={ask}
+                onPlayClip={playClip}
+                onChapter={goToChapter}
+                onRetry={retry}
+                onStop={stop}
+                busy={busy}
+                textareaRef={textareaRef}
+              />
+            </aside>
+          </main>
+        )}
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

@@ -25,6 +25,8 @@ type Props = {
   onExplain: (el: BoardElement) => void
   ink: Record<string, InkStroke[]>
   setInk: React.Dispatch<React.SetStateAction<Record<string, InkStroke[]>>>
+  captions: boolean
+  setCaptions: (v: boolean | ((c: boolean) => boolean)) => void
 }
 
 const TOOLS: { value: Tool; label: string; icon: React.ReactNode }[] = [
@@ -33,9 +35,8 @@ const TOOLS: { value: Tool; label: string; icon: React.ReactNode }[] = [
   { value: "highlighter", label: "Highlighter", icon: <HighlighterIcon /> },
 ]
 
-export function BoardStage({ player, snap, clip, isFollowup, onBackToLesson, onExplain, ink, setInk }: Props) {
+export function BoardStage({ player, snap, clip, isFollowup, onBackToLesson, onExplain, ink, setInk, captions, setCaptions }: Props) {
   const [tool, setTool] = React.useState<Tool>("pointer")
-  const [captions, setCaptions] = React.useState(true)
   const { board, items } = React.useMemo(() => visibleAt(snap.timeline, snap.time), [snap.timeline, snap.time])
   const chapter = snap.timeline.chapters[Math.max(0, board)]
   const inkKey = `${snap.clipId}:${board}`
@@ -57,7 +58,7 @@ export function BoardStage({ player, snap, clip, isFollowup, onBackToLesson, onE
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [player, snap.time])
+  }, [player, snap.time, setCaptions])
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-3" aria-label="Lesson player">

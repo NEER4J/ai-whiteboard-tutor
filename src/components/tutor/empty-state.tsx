@@ -1,89 +1,124 @@
 "use client"
 
 import * as React from "react"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import {
+  BrainCircuitIcon,
+  CaptionsIcon,
+  ChevronDownIcon,
+  RulerIcon,
+  SparklesIcon,
+  SunIcon,
+  SyringeIcon,
+  TrendingUpIcon,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Switch } from "@/components/ui/switch"
 import type { Level } from "@/lib/schema"
 import { PromptBox } from "./prompt-box"
 
-const SUGGESTIONS = [
-  "Why is the sky blue?",
-  "How does a neural network learn?",
-  "The Pythagorean theorem",
-  "How do vaccines train the immune system?",
-  "What is compound interest?",
-  "How does TCP's three-way handshake work?",
+const EXAMPLES = [
+  { text: "Why is the sky blue?", icon: SunIcon },
+  { text: "How does a neural network learn?", icon: BrainCircuitIcon },
+  { text: "Explain the Pythagorean theorem", icon: RulerIcon },
+  { text: "How do vaccines train the immune system?", icon: SyringeIcon },
+  { text: "What is compound interest?", icon: TrendingUpIcon },
 ]
 
-const LEVELS: { value: Level; label: string }[] = [
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
+const LEVELS: { value: Level; label: string; hint: string }[] = [
+  { value: "beginner", label: "Beginner", hint: "Everyday words and analogies" },
+  { value: "intermediate", label: "Intermediate", hint: "Correct terms and a worked example" },
+  { value: "advanced", label: "Advanced", hint: "Precise, with notation and subtleties" },
 ]
+
+const noopSubscribe = () => () => {}
+function greeting() {
+  const h = new Date().getHours()
+  return h < 5 ? "Good evening" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"
+}
 
 type Props = {
   level: Level
   setLevel: (l: Level) => void
+  captions: boolean
+  setCaptions: (v: boolean) => void
   onStart: (topic: string) => void
   mode: "live" | "sample" | null
 }
 
-export function EmptyState({ level, setLevel, onStart, mode }: Props) {
+export function EmptyState({ level, setLevel, captions, setCaptions, onStart, mode }: Props) {
   const [topic, setTopic] = React.useState("")
+  // Time-of-day greeting without a hydration mismatch.
+  const hello = React.useSyncExternalStore(noopSubscribe, greeting, () => "Hello")
+  const current = LEVELS.find((l) => l.value === level)!
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-4 pb-16">
-      <div className="flex w-full max-w-2xl flex-col gap-8">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            What do you want to understand?
+    <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 pb-10">
+      <div className="my-auto flex w-full max-w-3xl flex-col gap-9 py-8">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h1 className="text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-[2.5rem]">
+            {hello}.
+            <br />
+            What do you want to <span className="text-violet-500 dark:text-violet-400">learn</span>?
           </h1>
-          <p className="max-w-lg text-[15px] text-balance text-muted-foreground">
-            Get a two-minute lesson, narrated out loud and drawn on a whiteboard as it&apos;s explained. Pause anytime to ask
-            questions.
-          </p>
+          {mode === "sample" && (
+            <p className="mt-3 max-w-md text-xs text-balance text-muted-foreground">
+              Sample mode: no AI key is configured, so every topic plays the same pre-written lesson.
+            </p>
+          )}
         </div>
 
         <PromptBox
+          size="lg"
           autoFocus
           value={topic}
           onChange={setTopic}
           onSubmit={() => onStart(topic)}
-          placeholder="Type any topic, e.g. how do black holes form?"
+          placeholder="Ask AI to teach you anything…"
           addon={
-            <ToggleGroup
-              value={[level]}
-              onValueChange={(v) => v[0] && setLevel(v[0] as Level)}
-              size="sm"
-              spacing={0}
-              aria-label="Learner level"
-              className="rounded-full bg-background/60 p-0.5 dark:bg-background/30"
-            >
-              {LEVELS.map((l) => (
-                <ToggleGroupItem
-                  key={l.value}
-                  value={l.value}
-                  className="rounded-full px-3 text-xs text-muted-foreground aria-pressed:bg-background aria-pressed:text-foreground data-pressed:bg-background data-pressed:text-foreground dark:aria-pressed:bg-muted dark:data-pressed:bg-muted"
-                >
-                  {l.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button type="button" variant="outline" size="sm" className="rounded-lg bg-background" />}>
+                <SparklesIcon data-icon="inline-start" className="text-violet-500" />
+                {current.label}
+                <ChevronDownIcon data-icon="inline-end" className="opacity-60" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="bottom" className="w-64">
+                <DropdownMenuRadioGroup value={level} onValueChange={(v) => setLevel(v as Level)}>
+                  {LEVELS.map((l) => (
+                    <DropdownMenuRadioItem key={l.value} value={l.value} className="flex-col items-start gap-0">
+                      <span>{l.label}</span>
+                      <span className="text-xs text-muted-foreground">{l.hint}</span>
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          }
+          endAddon={
+            <label className="mr-2 flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground select-none">
+              <CaptionsIcon className="size-4 text-muted-foreground" />
+              Captions
+              <Switch checked={captions} onCheckedChange={setCaptions} aria-label="Show captions" />
+            </label>
           }
         />
 
-        <div className="flex flex-wrap justify-center gap-2">
-          {SUGGESTIONS.map((s) => (
-            <Button key={s} variant="secondary" size="sm" className="rounded-full font-normal" onClick={() => onStart(s)}>
-              {s}
-            </Button>
-          ))}
+        <div className="flex flex-col gap-3">
+          <p className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Get started with an example</p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {EXAMPLES.slice(0, 4).map(({ text, icon: Icon }) => (
+              <button
+                key={text}
+                type="button"
+                onClick={() => onStart(text)}
+                className="group flex min-h-28 flex-col justify-between gap-4 rounded-2xl bg-muted/60 p-4 text-left text-sm leading-snug text-foreground/90 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none dark:bg-muted/40 dark:hover:bg-muted/70"
+              >
+                <span>{text}</span>
+                <Icon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+              </button>
+            ))}
+          </div>
         </div>
-
-        {mode === "sample" && (
-          <p className="text-center text-xs text-muted-foreground">
-            Sample mode: no AI key is configured, so every topic plays a pre-written lesson.
-          </p>
-        )}
       </div>
     </div>
   )
