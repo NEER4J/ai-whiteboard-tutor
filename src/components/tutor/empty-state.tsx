@@ -5,15 +5,18 @@ import {
   BrainCircuitIcon,
   CaptionsIcon,
   ChevronDownIcon,
+  DicesIcon,
   RulerIcon,
-  SparklesIcon,
+  SignalIcon,
   SunIcon,
   SyringeIcon,
   TrendingUpIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Switch } from "@/components/ui/switch"
+import { Kbd } from "@/components/ui/kbd"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 import type { Level } from "@/lib/schema"
 import { PromptBox } from "./prompt-box"
 
@@ -54,7 +57,7 @@ export function EmptyState({ level, setLevel, captions, setCaptions, onStart, mo
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 pb-10">
-      <div className="my-auto flex w-full max-w-3xl flex-col gap-9 py-8">
+      <div className="my-auto flex w-full max-w-4xl flex-col gap-10 py-8">
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-[2.5rem]">
             {hello}.
@@ -74,15 +77,57 @@ export function EmptyState({ level, setLevel, captions, setCaptions, onStart, mo
           value={topic}
           onChange={setTopic}
           onSubmit={() => onStart(topic)}
-          placeholder="Ask AI to teach you anything…"
+          placeholder="Teach me how black holes form…"
           addon={
+            <>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="size-9 rounded-xl bg-background"
+                      aria-label="Surprise me with a topic"
+                      onClick={() => setTopic(EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)].text)}
+                    />
+                  }
+                >
+                  <DicesIcon />
+                </TooltipTrigger>
+                <TooltipContent>Surprise me</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      aria-pressed={captions}
+                      aria-label="Captions"
+                      className={cn("size-9 rounded-xl bg-background", captions ? "text-foreground" : "text-muted-foreground")}
+                      onClick={() => setCaptions(!captions)}
+                    />
+                  }
+                >
+                  <CaptionsIcon />
+                </TooltipTrigger>
+                <TooltipContent>{captions ? "Captions on" : "Captions off"}</TooltipContent>
+              </Tooltip>
+              <span className="ml-1 hidden items-center gap-1.5 text-sm text-muted-foreground sm:flex">
+                <Kbd>↵</Kbd> to start
+              </span>
+            </>
+          }
+          endAddon={
             <DropdownMenu>
-              <DropdownMenuTrigger render={<Button type="button" variant="outline" size="sm" className="rounded-lg bg-background" />}>
-                <SparklesIcon data-icon="inline-start" className="text-violet-500" />
+              <DropdownMenuTrigger render={<Button type="button" variant="outline" className="h-9 rounded-xl bg-background px-3" />}>
+                <SignalIcon data-icon="inline-start" className="text-violet-500" />
                 {current.label}
                 <ChevronDownIcon data-icon="inline-end" className="opacity-60" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="bottom" className="w-64">
+              <DropdownMenuContent align="end" side="bottom" className="w-64">
                 <DropdownMenuRadioGroup value={level} onValueChange={(v) => setLevel(v as Level)}>
                   {LEVELS.map((l) => (
                     <DropdownMenuRadioItem key={l.value} value={l.value} className="flex-col items-start gap-0">
@@ -93,13 +138,6 @@ export function EmptyState({ level, setLevel, captions, setCaptions, onStart, mo
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-          }
-          endAddon={
-            <label className="mr-2 flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground select-none">
-              <CaptionsIcon className="size-4 text-muted-foreground" />
-              Captions
-              <Switch checked={captions} onCheckedChange={setCaptions} aria-label="Show captions" />
-            </label>
           }
         />
 

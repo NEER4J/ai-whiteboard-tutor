@@ -70,6 +70,11 @@ export function TutorApp() {
     player?.setNoticeHandler((msg) => toast(msg))
   }, [player])
 
+  // No AI credentials: narrate with the browser voice from the start (no error toast).
+  React.useEffect(() => {
+    if (status?.mode === "sample") player?.setVoice("browser")
+  }, [status?.mode, player])
+
   const activate = React.useCallback(
     (id: string, clip: Pick<ClipState, "segments" | "done">, autoplay: boolean) => {
       activeRef.current = id
@@ -245,7 +250,7 @@ export function TutorApp() {
   return (
     <SidebarProvider defaultOpen className="h-dvh min-h-0">
       <AppSidebar activeId={lessonId} status={status} onNew={reset} onOpen={openSession} />
-      <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
+      <SidebarInset className="min-h-0 min-w-0 overflow-hidden border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
         <header className="flex h-12 shrink-0 items-center gap-2 px-3">
           <SidebarTrigger className="-ml-1 text-muted-foreground" />
           {inLesson && (

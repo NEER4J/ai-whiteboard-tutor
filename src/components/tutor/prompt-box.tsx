@@ -35,8 +35,9 @@ export function PromptBox({ value, onChange, onSubmit, placeholder, busy, onStop
     >
       <InputGroup
         className={cn(
-          "rounded-2xl border-transparent bg-muted/70 dark:bg-muted/50",
-          size === "lg" && "rounded-3xl bg-card ring-1 ring-border/60 dark:bg-card/60"
+          // The send button is disabled while empty; don't let that fade the whole box.
+          "rounded-2xl border-transparent bg-muted/70 has-disabled:bg-muted/70 has-disabled:opacity-100 dark:bg-muted/50 dark:has-disabled:bg-muted/50",
+          size === "lg" && "rounded-3xl border-border/80 bg-card has-disabled:bg-card dark:has-disabled:bg-card/70 shadow-[0_2px_10px_-4px_rgb(0_0_0/0.08)] dark:bg-card/70"
         )}
       >
         <InputGroupTextarea
@@ -54,9 +55,9 @@ export function PromptBox({ value, onChange, onSubmit, placeholder, busy, onStop
           }}
           placeholder={placeholder}
           aria-label={placeholder}
-          className={cn("max-h-40 px-4 pt-3.5 text-[15px] md:text-[15px]", size === "lg" ? "min-h-24" : "min-h-12")}
+          className={cn("max-h-40 px-4 pt-3.5 text-[15px] md:text-[15px]", size === "lg" ? "min-h-[4.5rem] px-5 pt-5 text-base md:text-base" : "min-h-12")}
         />
-        <InputGroupAddon align="block-end" className="px-2.5 pb-2.5">
+        <InputGroupAddon align="block-end" className={cn("px-2.5 pb-2.5", size === "lg" && "px-3.5 pb-3.5")}>
           {addon}
           <div className="flex-1" />
           {endAddon}

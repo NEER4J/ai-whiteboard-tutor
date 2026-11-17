@@ -67,7 +67,7 @@ export function AppSidebar({ activeId, status, onNew, onOpen }: Props) {
   const closeOnMobile = () => isMobile && setOpenMobile(false)
 
   return (
-    <Sidebar collapsible="offcanvas" variant="sidebar" className="border-r-0">
+    <Sidebar collapsible="offcanvas" variant="inset">
       <SidebarHeader className="gap-3 px-3 pt-4">
         <button
           type="button"
