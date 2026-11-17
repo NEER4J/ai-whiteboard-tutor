@@ -334,7 +334,7 @@ export function TutorApp() {
   }, [lessonTitle])
 
   return (
-    <SidebarProvider defaultOpen className="h-dvh min-h-0">
+    <SidebarProvider defaultOpen className="h-dvh min-h-0 [--board-panel:var(--color-zinc-200)] dark:[--board-panel:var(--color-zinc-800)]">
       <AppSidebar activeId={lessonId} status={status} onNew={goHome} onOpen={(id) => openSession(id)} />
       <SidebarInset className="min-h-0 min-w-0 overflow-hidden border border-border/80 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow-none">
         <header className="flex h-12 shrink-0 items-center px-3">
@@ -356,7 +356,12 @@ export function TutorApp() {
               </>
             )}
           </div>
-          {inLesson && snap && <ChapterPicker snap={snap} onSelect={(i) => activeId && goToChapter(activeId, i)} />}
+          {inLesson && snap && (
+            // On wide screens this is a tab fused to the top-left of the preview panel.
+            <div className="relative lg:h-10 lg:self-end lg:rounded-t-2xl lg:bg-[var(--board-panel)] lg:px-2 lg:after:absolute lg:after:bottom-0 lg:after:-right-3 lg:after:size-3 lg:after:[background:radial-gradient(circle_at_100%_0,transparent_0.75rem,var(--board-panel)_0.75rem)] lg:flex lg:items-center">
+              <ChapterPicker snap={snap} onSelect={(i) => activeId && goToChapter(activeId, i)} />
+            </div>
+          )}
           <HeaderActions
             inLesson={inLesson}
             title={lessonTitle ?? "Lesson"}
@@ -373,7 +378,7 @@ export function TutorApp() {
         ) : (
           <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
             {/* Whiteboard preview */}
-            <div ref={boardPanel} className="mx-3 mb-3 flex min-h-0 flex-[3] flex-col rounded-2xl bg-muted/60 p-3 lg:order-2 lg:m-3 lg:mt-0 lg:min-w-0 lg:flex-1 lg:p-5 dark:bg-muted/30 fullscreen:m-0 fullscreen:rounded-none fullscreen:bg-background fullscreen:p-6">
+            <div ref={boardPanel} className="mx-3 mb-3 flex min-h-0 flex-[3] flex-col rounded-2xl bg-[var(--board-panel)] p-3 lg:order-2 lg:m-3 lg:mt-0 lg:min-w-0 lg:flex-1 lg:rounded-tl-none lg:p-5 fullscreen:m-0 fullscreen:rounded-none fullscreen:bg-background fullscreen:p-6">
               <BoardStage
                 player={player}
                 snap={snap}
